@@ -1,0 +1,24 @@
+{
+  "name": "KineFlex Smart Rehab App",
+  "short_name": "KineFlex",
+  "description": "แอปควบคุมเตียงกายภาพบำบัดอัจฉริยะ พร้อมระบบจับเวลา/นับครั้ง ตัดฉุกเฉิน 2 ชั้น และบันทึกวิเคราะห์กราฟ",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='44' fill='%23059669'/%3E%3Cpath d='M108 32L44 108h48l-12 52 68-80h-48z' fill='white'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23059669'/%3E%3Cpath d='M288 86L118 288h128l-32 138 180-212H266z' fill='white'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

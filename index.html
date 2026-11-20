@@ -2,8 +2,13 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kine fIex  - AI Controller & Detailed Clinical Analytics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#059669">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KineFlex">
+  <link rel="manifest" href="./manifest.json">
+  <title>KineFlex — Smart Rehab Mobile App</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +25,7 @@
       box-shadow: 0 4px 20px -2px rgba(245, 158, 11, 0.45);
     }
     .mobile-shell {
-      max-width: 450px;
+      max-width: 480px;
       margin: 0 auto;
       min-height: 100vh;
       background: #f8fafc;
@@ -28,7 +33,10 @@
       transition: max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .mobile-shell.studio-wide {
-      max-width: 1180px;
+      max-width: 1120px;
+    }
+    .safe-bottom-nav {
+      padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
     }
     @keyframes pop-up {
       0% { transform: translateY(0) scale(0.8); opacity: 1; }
@@ -58,7 +66,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
 
-  <div id="appShell" class="mobile-shell studio-wide flex flex-col justify-between relative overflow-hidden pb-8">
+  <div id="appShell" class="mobile-shell studio-wide flex flex-col justify-between relative overflow-hidden pb-24">
     
     <!-- Top Header (Clean & Essential Only) -->
     <header class="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white py-3.5 px-4 md:px-5 rounded-b-3xl shadow-lg relative z-20">
@@ -209,6 +217,66 @@
           <div class="col-span-2 sm:col-span-1 bg-slate-900/90 rounded-xl px-2 py-1.5 border border-slate-800">
             <span class="text-[9px] text-slate-400 block font-sans">ผลตรวจความปลอดภัย</span>
             <span id="hwReadoutResult" class="text-[11px] font-extrabold text-emerald-300">OK</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE APP PROGRAM LAUNCHER: 2 MODES (TIMER vs REPS) + BIG START/STOP & AUTO-RECORD -->
+      <div id="appSessionCard" class="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 text-white rounded-3xl p-4 shadow-lg border border-emerald-500/30 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block">Rehab Session Program</span>
+            <h3 class="text-sm font-extrabold text-white">เริ่มโปรแกรมกายภาพ & บันทึกผลอัตโนมัติ</h3>
+          </div>
+
+          <!-- 2-Mode Segmented Switcher -->
+          <div class="bg-black/40 p-1 rounded-2xl grid grid-cols-2 gap-1 border border-white/10">
+            <button type="button" id="appModeBtn-time" onclick="setAppSessionMode('time')" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs transition-all cursor-pointer">
+              ⏱️ จับเวลา
+            </button>
+            <button type="button" id="appModeBtn-reps" onclick="setAppSessionMode('reps')" class="px-3 py-1.5 rounded-xl text-slate-300 hover:text-white font-bold text-xs transition-all cursor-pointer">
+              🔁 จับจำนวนครั้ง
+            </button>
+          </div>
+        </div>
+
+        <!-- Mode Target Picker (Time in Minutes OR Reps Count) -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <!-- Timer Presets -->
+          <div id="appTimePicker" class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] text-slate-300 font-semibold mr-1">เวลาเป้าหมาย:</span>
+            <button type="button" onclick="setAppTargetMinutes(1)" data-min="1" class="app-min-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">1 นาที</button>
+            <button type="button" onclick="setAppTargetMinutes(5)" data-min="5" class="app-min-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/25 border border-emerald-400 text-emerald-200 cursor-pointer">5 นาที</button>
+            <button type="button" onclick="setAppTargetMinutes(10)" data-min="10" class="app-min-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">10 นาที</button>
+            <button type="button" onclick="setAppTargetMinutes(15)" data-min="15" class="app-min-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">15 นาที</button>
+            <button type="button" onclick="setAppTargetMinutes(20)" data-min="20" class="app-min-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">20 นาที</button>
+          </div>
+
+          <!-- Reps Presets -->
+          <div id="appRepsPicker" class="hidden flex flex-wrap items-center gap-1.5">
+            <span class="text-[11px] text-slate-300 font-semibold mr-1">จำนวนครั้ง:</span>
+            <button type="button" onclick="setAppTargetReps(5)" data-rep="5" class="app-rep-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">5 ครั้ง</button>
+            <button type="button" onclick="setAppTargetReps(10)" data-rep="10" class="app-rep-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">10 ครั้ง</button>
+            <button type="button" onclick="setAppTargetReps(15)" data-rep="15" class="app-rep-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/25 border border-emerald-400 text-emerald-200 cursor-pointer">15 ครั้ง</button>
+            <button type="button" onclick="setAppTargetReps(20)" data-rep="20" class="app-rep-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">20 ครั้ง</button>
+            <button type="button" onclick="setAppTargetReps(30)" data-rep="30" class="app-rep-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer">30 ครั้ง</button>
+          </div>
+
+          <!-- Big Thumb-Friendly START / STOP & SAVE Button -->
+          <button type="button" id="btnAppSessionToggle" onclick="toggleAppRehabSession()" class="w-full md:w-auto px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 active:scale-95 text-slate-950 font-black text-sm rounded-2xl shadow-lg mint-glow flex items-center justify-center space-x-2 transition-all cursor-pointer shrink-0">
+            <span id="appSessionBtnIcon">▶️</span>
+            <span id="appSessionBtnText">เริ่มกายภาพ (บันทึกอัตโนมัติ)</span>
+          </button>
+        </div>
+
+        <!-- Live Session Progress Strip -->
+        <div class="bg-black/35 rounded-2xl p-2.5 border border-white/10 space-y-1.5">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span id="appSessionLiveMetric" class="font-extrabold text-emerald-300">พร้อมเริ่ม • เป้าหมาย 5:00 นาที</span>
+            <span id="appSessionLiveStats" class="text-[10.5px] text-slate-300">รอบ: 0 | เวลา: 00:00 | EMG เฉลี่ย: --%</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="appSessionProgressBar" class="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full transition-all duration-300" style="width: 0%"></div>
           </div>
         </div>
       </div>
@@ -1131,7 +1199,130 @@
       </main>
     </div>
 
+    <!-- ================= APP VIEW 2: DETAILED RECORDS, ANALYTICS & GRAPHS ================= -->
+    <div id="view-records" class="px-3 md:px-5 mt-3 space-y-3 hidden">
+
+      <!-- Top Summary KPI Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200/90">
+          <span class="text-[10px] font-bold text-slate-400 block">บันทึกทั้งหมด</span>
+          <strong id="recKpiTotalSessions" class="text-xl font-black text-slate-800 font-mono">0</strong>
+          <span class="text-[10px] text-emerald-600 font-semibold block">เซสชันในเครื่อง</span>
+        </div>
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200/90">
+          <span class="text-[10px] font-bold text-slate-400 block">จำนวนครั้งสะสม</span>
+          <strong id="recKpiTotalReps" class="text-xl font-black text-cyan-700 font-mono">0</strong>
+          <span id="recKpiTotalTime" class="text-[10px] text-slate-500 font-semibold block">รวม 0 นาที</span>
+        </div>
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200/90">
+          <span class="text-[10px] font-bold text-slate-400 block">คนไข้ช่วยออกแรงเฉลี่ย</span>
+          <strong id="recKpiAvgAssist" class="text-xl font-black text-emerald-600 font-mono">0%</strong>
+          <span class="text-[10px] text-slate-500 font-semibold block">Assist-as-Needed</span>
+        </div>
+        <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200/90">
+          <span class="text-[10px] font-bold text-slate-400 block">ตัดฉุกเฉินสะสม</span>
+          <strong id="recKpiTotalAlerts" class="text-xl font-black text-rose-600 font-mono">0</strong>
+          <span class="text-[10px] text-slate-500 font-semibold block">ขัดมอเตอร์ / EMG</span>
+        </div>
+      </div>
+
+      <!-- 2 ANALYTICS GRAPHS: (A) PROGRESS TREND  &  (B) SELECTED SESSION TIMELINE -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+        <!-- Graph A: Multi-Session Progress Trend -->
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/90 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h3 class="text-xs md:text-sm font-extrabold text-slate-800">📈 กราฟแนวโน้มพัฒนาการย้อนหลัง</h3>
+              <p class="text-[10.5px] text-slate-500">เปรียบเทียบ EMG เฉลี่ย, การช่วยออกแรง (%) และ Motor Power (W) แต่ละครั้ง</p>
+            </div>
+          </div>
+          <div class="h-48 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800">
+            <canvas id="recordsTrendCanvas" class="w-full h-full block"></canvas>
+            <div class="absolute left-2 top-1.5 flex items-center space-x-2 text-[9px] font-mono bg-slate-900/85 px-2 py-0.5 rounded text-slate-300">
+              <span class="text-emerald-400">● คนช่วยออกแรง %</span>
+              <span class="text-amber-300">● EMG เฉลี่ย %</span>
+              <span class="text-sky-400">● Power (W)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Graph B: Detailed Timeline of Selected Session -->
+        <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/90 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <h3 id="selectedRecTitle" class="text-xs md:text-sm font-extrabold text-slate-800 truncate">📊 กราฟละเอียดของเซสชันที่เลือก</h3>
+              <p id="selectedRecSubtitle" class="text-[10.5px] text-slate-500 truncate">แตะรายการบันทึกด้านล่างเพื่อดูกราฟและผลวิเคราะห์</p>
+            </div>
+            <span id="selectedRecBadge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">สำเร็จ</span>
+          </div>
+          <div class="h-48 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800">
+            <canvas id="recordsSessionDetailCanvas" class="w-full h-full block"></canvas>
+            <div class="absolute left-2 top-1.5 flex items-center space-x-2 text-[9px] font-mono bg-slate-900/85 px-2 py-0.5 rounded text-slate-300">
+              <span class="text-emerald-400">● EMG %</span>
+              <span class="text-orange-400">● แรงต้าน mA</span>
+              <span class="text-sky-400">● Power W</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DETAILED CLINICAL ANALYSIS PANEL FOR SELECTED RECORD -->
+      <div id="selectedRecordAnalysisBox" class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl p-4 shadow-md border border-slate-700 space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xs font-extrabold text-emerald-300">🧠 สรุปผลวิเคราะห์กายภาพเชิงลึก (Session Analysis)</span>
+          <span id="selectedRecMeta" class="text-[10.5px] font-mono text-slate-300">--</span>
+        </div>
+        <div id="selectedRecMetricsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono text-xs">
+          <!-- Populated by JS -->
+        </div>
+        <p id="selectedRecClinicalText" class="text-xs text-slate-200 leading-relaxed bg-black/30 rounded-2xl p-3 border border-white/10">
+          กดเริ่มโปรแกรมกายภาพเพื่อบันทึกข้อมูล หรือแตะที่รายการบันทึกด้านล่างเพื่อดูบทวิเคราะห์
+        </p>
+      </div>
+
+      <!-- HISTORY LIST WITH FILTER & CSV EXPORT -->
+      <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/90 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" onclick="setRecordsFilter('all')" id="recFilter-all" class="px-3 py-1 rounded-xl text-xs font-bold bg-slate-900 text-white cursor-pointer">ทั้งหมด</button>
+            <button type="button" onclick="setRecordsFilter('time')" id="recFilter-time" class="px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 cursor-pointer">⏱️ จับเวลา</button>
+            <button type="button" onclick="setRecordsFilter('reps')" id="recFilter-reps" class="px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 cursor-pointer">🔁 จับจำนวนครั้ง</button>
+            <button type="button" onclick="setRecordsFilter('alert')" id="recFilter-alert" class="px-3 py-1 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 cursor-pointer">🚨 มีเหตุฉุกเฉิน</button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="exportAppRecordsCsv()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer">
+              📥 ส่งออก CSV
+            </button>
+            <button type="button" onclick="clearAllAppRecords()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 hover:text-rose-700 text-xs font-bold cursor-pointer">
+              🗑️ ล้าง
+            </button>
+          </div>
+        </div>
+
+        <div id="recordsListContainer" class="space-y-2 max-h-96 overflow-y-auto pr-1">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+    </div>
+
   </div>
+
+  <!-- FIXED MOBILE APP BOTTOM TAB BAR (Thumb-Friendly iOS & Android Dock) -->
+  <nav id="mobileBottomNav" class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] safe-bottom-nav">
+    <div class="max-w-lg mx-auto px-4 pt-2 pb-1 grid grid-cols-2 gap-3">
+      <button type="button" id="bottomTab-control" onclick="switchAppTab('control')" class="py-2 px-3 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-sm transition-all cursor-pointer">
+        <span class="text-base">🦾</span>
+        <span>ควบคุมกายภาพ</span>
+      </button>
+      <button type="button" id="bottomTab-records" onclick="switchAppTab('records')" class="py-2 px-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer">
+        <span class="text-base">📊</span>
+        <span>บันทึก &amp; วิเคราะห์</span>
+        <span id="bottomTabRecordsCount" class="px-1.5 py-0.5 text-[10px] font-mono font-extrabold rounded-full bg-emerald-100 text-emerald-800">0</span>
+      </button>
+    </div>
+  </nav>
 
   <!-- DEEP-DIVE SESSION DETAIL MODAL -->
   <div id="sessionDetailModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
@@ -5612,6 +5803,9 @@
           ? 'ฉุกเฉิน ตรวจพบกล้ามเนื้อกระตุกผิดปกติ หยุดมอเตอร์ทันที'
           : 'ฉุกเฉิน หยุดการทำงานมอเตอร์ทันที';
       startEmergencyAlarm(voiceMsg);
+      if (typeof notifyAppSessionEmergency === 'function') {
+        notifyAppSessionEmergency(code, source === 'motor');
+      }
     }
 
     let demoAssistActive = false;
@@ -5765,6 +5959,9 @@
           ? 'ฉุกเฉิน ตรวจพบการขัดมอเตอร์และกระแสเกินพิกัด ตัดกำลังมอเตอร์ทันที'
           : 'ฉุกเฉิน ตรวจพบกล้ามเนื้อกระตุกผิดปกติ หยุดมอเตอร์ทันที';
         startEmergencyAlarm(voiceMsg);
+        if (typeof notifyAppSessionEmergency === 'function') {
+          notifyAppSessionEmergency(sim.raw.result, Boolean(sim.isMotorFault));
+        }
 
         if (hwSensorState.lastEmergencyResult !== sim.raw.result) {
           hwSensorState.lastEmergencyResult = sim.raw.result;
@@ -6149,6 +6346,9 @@
       if (resPill) {
         resPill.innerText = `${Math.round(resMA)} mA | ${powerW.toFixed(2)} W`;
       }
+      if (typeof recordAppSessionSample === 'function') {
+        recordAppSessionSample(emgPct, resMA, powerW);
+      }
     }
 
     function drawEmgPowerChart() {
@@ -6286,6 +6486,821 @@
 
       ctx.restore();
     }
+
+    // ============================================================================
+    // MOBILE REHAB APP ENGINE: 2-MODE PROGRAM (TIMER / REPS) + DETAILED ANALYTICS
+    // ============================================================================
+    const APP_RECORDS_STORAGE_KEY = 'kineflex_app_records_v1';
+    const PART_NAME_TH = {
+      arm: 'แขน (Full Arm)',
+      leg: 'ขา (Full Leg)',
+      elbow: 'ข้อแขน (Elbow)',
+      knee: 'ข้อขา (Knee)',
+      all4: 'ครบ 4 ส่วน (All 4)'
+    };
+
+    const appSession = {
+      active: false,
+      mode: 'time',          // 'time' | 'reps'
+      targetMinutes: 5,
+      targetReps: 15,
+      startedAtMs: 0,
+      elapsedSec: 0,
+      repsDone: 0,
+      lastCycleIdx: 0,
+      hwRepHighArmed: false,
+      timerId: null,
+      lastSampleMs: 0,
+      sumEmg: 0,
+      maxEmg: 0,
+      sumResMA: 0,
+      maxResMA: 0,
+      sumPowerW: 0,
+      maxPowerW: 0,
+      sampleCount: 0,
+      motorJamCount: 0,
+      emgSpikeCount: 0,
+      timeline: []
+    };
+
+    let appRecords = [];
+    let appRecordsFilter = 'all';
+    let selectedRecordId = null;
+
+    function formatMinSec(totalSec) {
+      const s = Math.max(0, Math.floor(totalSec));
+      const mm = Math.floor(s / 60);
+      const ss = s % 60;
+      return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+    }
+
+    function createSeedRecords() {
+      const makeTimeline = (baseEmg, baseRes, baseP, hasSpike = false) => {
+        const arr = [];
+        for (let i = 0; i < 24; i++) {
+          const wave = Math.sin(i * 0.55);
+          const emg = Math.round(Math.max(8, Math.min(95, baseEmg + wave * 6 + (hasSpike && i === 18 ? 55 : 0))));
+          const resMA = Math.round(Math.max(60, baseRes + Math.cos(i * 0.5) * 28 + (hasSpike && i === 18 ? 420 : 0)));
+          const powerW = Number(((resMA * 5.0) / 1000).toFixed(2));
+          arr.push({ t: i * 10, emg, resMA, powerW });
+        }
+        return arr;
+      };
+      return [
+        {
+          id: 'seed-3',
+          timestampIso: new Date(Date.now() - 86400000 * 1).toISOString(),
+          dateLabel: 'เมื่อวาน',
+          timeLabel: '16:20',
+          mode: 'reps',
+          targetLabel: '20 ครั้ง',
+          part: 'arm',
+          partLabel: PART_NAME_TH.arm,
+          durationSec: 215,
+          repsDone: 20,
+          targetReps: 20,
+          completionPct: 100,
+          avgEmg: 31,
+          maxEmg: 44,
+          avgPowerW: 0.72,
+          maxPowerW: 1.05,
+          avgResMA: 144,
+          maxResMA: 210,
+          patientAssistPct: 68,
+          motorJamCount: 0,
+          emgSpikeCount: 0,
+          endReason: 'ครบโปรแกรม',
+          source: 'ตัวอย่างเริ่มต้น',
+          timeline: makeTimeline(31, 144, 0.72, false)
+        },
+        {
+          id: 'seed-2',
+          timestampIso: new Date(Date.now() - 86400000 * 2).toISOString(),
+          dateLabel: '2 วันก่อน',
+          timeLabel: '10:05',
+          mode: 'time',
+          targetLabel: '5 นาที',
+          part: 'elbow',
+          partLabel: PART_NAME_TH.elbow,
+          durationSec: 300,
+          repsDone: 18,
+          targetReps: 0,
+          completionPct: 100,
+          avgEmg: 24,
+          maxEmg: 38,
+          avgPowerW: 0.94,
+          maxPowerW: 1.32,
+          avgResMA: 188,
+          maxResMA: 264,
+          patientAssistPct: 54,
+          motorJamCount: 0,
+          emgSpikeCount: 0,
+          endReason: 'ครบโปรแกรม',
+          source: 'ตัวอย่างเริ่มต้น',
+          timeline: makeTimeline(24, 188, 0.94, false)
+        },
+        {
+          id: 'seed-1',
+          timestampIso: new Date(Date.now() - 86400000 * 3).toISOString(),
+          dateLabel: '3 วันก่อน',
+          timeLabel: '09:30',
+          mode: 'reps',
+          targetLabel: '15 ครั้ง',
+          part: 'arm',
+          partLabel: PART_NAME_TH.arm,
+          durationSec: 132,
+          repsDone: 11,
+          targetReps: 15,
+          completionPct: 73,
+          avgEmg: 20,
+          maxEmg: 86,
+          avgPowerW: 1.18,
+          maxPowerW: 3.15,
+          avgResMA: 236,
+          maxResMA: 630,
+          patientAssistPct: 38,
+          motorJamCount: 1,
+          emgSpikeCount: 0,
+          endReason: 'หยุดฉุกเฉิน (ขัดมอเตอร์)',
+          source: 'ตัวอย่างเริ่มต้น',
+          timeline: makeTimeline(20, 220, 1.10, true)
+        }
+      ];
+    }
+
+    function loadAppRecords() {
+      try {
+        const raw = localStorage.getItem(APP_RECORDS_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            appRecords = parsed;
+            selectedRecordId = appRecords[0].id;
+            updateBottomTabBadge();
+            return;
+          }
+        }
+      } catch (_) {}
+      appRecords = createSeedRecords();
+      selectedRecordId = appRecords[0].id;
+      updateBottomTabBadge();
+    }
+
+    function saveAppRecordsToStorage() {
+      try {
+        localStorage.setItem(APP_RECORDS_STORAGE_KEY, JSON.stringify(appRecords.slice(0, 60)));
+      } catch (_) {}
+      updateBottomTabBadge();
+    }
+
+    function updateBottomTabBadge() {
+      const badge = document.getElementById('bottomTabRecordsCount');
+      if (badge) badge.innerText = String(appRecords.length);
+    }
+
+    function switchAppTab(tab) {
+      const vControl = document.getElementById('view-kinematics');
+      const vRecords = document.getElementById('view-records');
+      const vLive = document.getElementById('view-live');
+      const vHist = document.getElementById('view-history');
+      const bControl = document.getElementById('bottomTab-control');
+      const bRecords = document.getElementById('bottomTab-records');
+
+      if (vLive) vLive.classList.add('hidden');
+      if (vHist) vHist.classList.add('hidden');
+
+      if (tab === 'records') {
+        if (vControl) vControl.classList.add('hidden');
+        if (vRecords) vRecords.classList.remove('hidden');
+        if (bControl) bControl.className = 'py-2 px-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer';
+        if (bRecords) bRecords.className = 'py-2 px-3 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-sm transition-all cursor-pointer';
+        renderAppRecordsDashboard();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        if (vRecords) vRecords.classList.add('hidden');
+        if (vControl) vControl.classList.remove('hidden');
+        if (bControl) bControl.className = 'py-2 px-3 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-sm transition-all cursor-pointer';
+        if (bRecords) bRecords.className = 'py-2 px-3 rounded-2xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer';
+        setTimeout(resizeKinCanvases, 40);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function setAppSessionMode(mode) {
+      if (appSession.active) return;
+      appSession.mode = mode === 'reps' ? 'reps' : 'time';
+      const btnTime = document.getElementById('appModeBtn-time');
+      const btnReps = document.getElementById('appModeBtn-reps');
+      const timePicker = document.getElementById('appTimePicker');
+      const repsPicker = document.getElementById('appRepsPicker');
+
+      if (appSession.mode === 'time') {
+        if (btnTime) btnTime.className = 'px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs transition-all cursor-pointer';
+        if (btnReps) btnReps.className = 'px-3 py-1.5 rounded-xl text-slate-300 hover:text-white font-bold text-xs transition-all cursor-pointer';
+        if (timePicker) timePicker.classList.remove('hidden');
+        if (repsPicker) repsPicker.classList.add('hidden');
+      } else {
+        if (btnTime) btnTime.className = 'px-3 py-1.5 rounded-xl text-slate-300 hover:text-white font-bold text-xs transition-all cursor-pointer';
+        if (btnReps) btnReps.className = 'px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs transition-all cursor-pointer';
+        if (timePicker) timePicker.classList.add('hidden');
+        if (repsPicker) repsPicker.classList.remove('hidden');
+      }
+      updateAppSessionProgressUI();
+    }
+
+    function setAppTargetMinutes(min) {
+      if (appSession.active) return;
+      appSession.targetMinutes = min;
+      document.querySelectorAll('.app-min-btn').forEach(b => {
+        const active = Number(b.getAttribute('data-min')) === min;
+        b.className = active
+          ? 'app-min-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/25 border border-emerald-400 text-emerald-200 cursor-pointer'
+          : 'app-min-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer';
+      });
+      updateAppSessionProgressUI();
+    }
+
+    function setAppTargetReps(reps) {
+      if (appSession.active) return;
+      appSession.targetReps = reps;
+      document.querySelectorAll('.app-rep-btn').forEach(b => {
+        const active = Number(b.getAttribute('data-rep')) === reps;
+        b.className = active
+          ? 'app-rep-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/25 border border-emerald-400 text-emerald-200 cursor-pointer'
+          : 'app-rep-btn px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white cursor-pointer';
+      });
+      updateAppSessionProgressUI();
+    }
+
+    function updateAppSessionProgressUI() {
+      const metricEl = document.getElementById('appSessionLiveMetric');
+      const statsEl = document.getElementById('appSessionLiveStats');
+      const barEl = document.getElementById('appSessionProgressBar');
+      const btnEl = document.getElementById('btnAppSessionToggle');
+      const btnIcon = document.getElementById('appSessionBtnIcon');
+      const btnText = document.getElementById('appSessionBtnText');
+
+      let pct = 0;
+      if (appSession.active) {
+        if (appSession.mode === 'time') {
+          const targetSec = appSession.targetMinutes * 60;
+          const remain = Math.max(0, targetSec - appSession.elapsedSec);
+          pct = Math.min(100, Math.round((appSession.elapsedSec / targetSec) * 100));
+          if (metricEl) metricEl.innerText = `⏱️ เหลือเวลา ${formatMinSec(remain)} (${pct}%)`;
+        } else {
+          pct = Math.min(100, Math.round((appSession.repsDone / appSession.targetReps) * 100));
+          if (metricEl) metricEl.innerText = `🔁 ทำได้ ${appSession.repsDone} / ${appSession.targetReps} ครั้ง (${pct}%)`;
+        }
+        const avgEmg = appSession.sampleCount > 0 ? Math.round(appSession.sumEmg / appSession.sampleCount) : 0;
+        const avgP = appSession.sampleCount > 0 ? (appSession.sumPowerW / appSession.sampleCount).toFixed(2) : '0.00';
+        if (statsEl) statsEl.innerText = `รอบ: ${appSession.repsDone} | เวลา: ${formatMinSec(appSession.elapsedSec)} | EMG: ${avgEmg}% | ${avgP} W`;
+        if (btnEl) btnEl.className = 'w-full md:w-auto px-5 py-3 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 active:scale-95 text-white font-black text-sm rounded-2xl shadow-lg flex items-center justify-center space-x-2 transition-all cursor-pointer shrink-0';
+        if (btnIcon) btnIcon.innerText = '⏹️';
+        if (btnText) btnText.innerText = 'หยุดและบันทึกผล';
+      } else {
+        if (metricEl) {
+          metricEl.innerText = appSession.mode === 'time'
+            ? `พร้อมเริ่ม • โหมดจับเวลา ${appSession.targetMinutes}:00 นาที`
+            : `พร้อมเริ่ม • โหมดจับจำนวนครั้ง ${appSession.targetReps} ครั้ง`;
+        }
+        if (statsEl) statsEl.innerText = `บันทึกแล้ว ${appRecords.length} เซสชันในเครื่อง`;
+        if (btnEl) btnEl.className = 'w-full md:w-auto px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 active:scale-95 text-slate-950 font-black text-sm rounded-2xl shadow-lg mint-glow flex items-center justify-center space-x-2 transition-all cursor-pointer shrink-0';
+        if (btnIcon) btnIcon.innerText = '▶️';
+        if (btnText) btnText.innerText = 'เริ่มกายภาพ (บันทึกอัตโนมัติ)';
+      }
+
+      if (barEl) barEl.style.width = `${pct}%`;
+    }
+
+    function playSessionCompleteChime() {
+      const ctx = ensureAlarmAudioContext();
+      if (!ctx) return;
+      [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const t0 = ctx.currentTime + idx * 0.12;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t0);
+        gain.gain.setValueAtTime(0.001, t0);
+        gain.gain.linearRampToValueAtTime(0.35, t0 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + 0.26);
+      });
+    }
+
+    function toggleAppRehabSession() {
+      ensureAlarmAudioContext();
+      if (appSession.active) {
+        finishAppRehabSession('หยุดด้วยตนเอง');
+        return;
+      }
+
+      // Start new session
+      clearDashboardEmergency();
+      appSession.active = true;
+      appSession.startedAtMs = Date.now();
+      appSession.elapsedSec = 0;
+      appSession.repsDone = 0;
+      appSession.lastCycleIdx = Math.floor(kinPhase / (Math.PI * 2));
+      appSession.hwRepHighArmed = false;
+      appSession.lastSampleMs = 0;
+      appSession.sumEmg = 0;
+      appSession.maxEmg = 0;
+      appSession.sumResMA = 0;
+      appSession.maxResMA = 0;
+      appSession.sumPowerW = 0;
+      appSession.maxPowerW = 0;
+      appSession.sampleCount = 0;
+      appSession.motorJamCount = 0;
+      appSession.emgSpikeCount = 0;
+      appSession.timeline = [];
+
+      if (hwSensorState.connected) {
+        sendHwCommand('START');
+      } else {
+        kinSimPlaying = true;
+      }
+
+      if (appSession.timerId) clearInterval(appSession.timerId);
+      appSession.timerId = setInterval(() => {
+        if (!appSession.active) return;
+        appSession.elapsedSec = Math.floor((Date.now() - appSession.startedAtMs) / 1000);
+        if (appSession.mode === 'time' && appSession.elapsedSec >= appSession.targetMinutes * 60) {
+          finishAppRehabSession('ครบโปรแกรม');
+          return;
+        }
+        updateAppSessionProgressUI();
+      }, 500);
+
+      updateAppSessionProgressUI();
+    }
+
+    function recordAppSessionSample(emgPct, resMA, powerW) {
+      if (!appSession.active) return;
+
+      // Count reps accurately from real servo sweep OR demo phase
+      if (hwSensorState.connected && hwSensorState.hasTelemetry && hwSensorState.raw) {
+        const ang = hwSensorState.raw.angle;
+        if (ang >= 82) appSession.hwRepHighArmed = true;
+        if (appSession.hwRepHighArmed && ang <= 48) {
+          appSession.hwRepHighArmed = false;
+          appSession.repsDone++;
+        }
+      } else {
+        const cycleIdx = Math.floor(kinPhase / (Math.PI * 2));
+        if (cycleIdx > appSession.lastCycleIdx) {
+          appSession.lastCycleIdx = cycleIdx;
+          appSession.repsDone++;
+        }
+      }
+
+      appSession.sumEmg += emgPct;
+      appSession.maxEmg = Math.max(appSession.maxEmg, emgPct);
+      appSession.sumResMA += resMA;
+      appSession.maxResMA = Math.max(appSession.maxResMA, resMA);
+      appSession.sumPowerW += powerW;
+      appSession.maxPowerW = Math.max(appSession.maxPowerW, powerW);
+      appSession.sampleCount++;
+
+      // Record timeline point every ~500 ms (capped smoothly)
+      const now = Date.now();
+      if (now - appSession.lastSampleMs >= 500) {
+        appSession.lastSampleMs = now;
+        const sec = Math.floor((now - appSession.startedAtMs) / 1000);
+        appSession.timeline.push({
+          t: sec,
+          emg: Math.round(emgPct),
+          resMA: Math.round(resMA),
+          powerW: Number(powerW.toFixed(2))
+        });
+        if (appSession.timeline.length > 180) {
+          // Downsample evenly if very long session
+          appSession.timeline = appSession.timeline.filter((_, idx) => idx % 2 === 0);
+        }
+      }
+
+      if (appSession.mode === 'reps' && appSession.repsDone >= appSession.targetReps) {
+        finishAppRehabSession('ครบโปรแกรม');
+        return;
+      }
+
+      updateAppSessionProgressUI();
+    }
+
+    function notifyAppSessionEmergency(code, isMotorFault) {
+      if (!appSession.active) return;
+      if (isMotorFault) appSession.motorJamCount++;
+      else appSession.emgSpikeCount++;
+      const label = isMotorFault
+        ? `หยุดฉุกเฉิน (ขัดมอเตอร์ ${code})`
+        : `หยุดฉุกเฉิน (EMG ${code})`;
+      finishAppRehabSession(label);
+    }
+
+    function finishAppRehabSession(endReason) {
+      if (!appSession.active) return;
+      appSession.active = false;
+      if (appSession.timerId) {
+        clearInterval(appSession.timerId);
+        appSession.timerId = null;
+      }
+      if (hwSensorState.connected) {
+        sendHwCommand('STOP');
+      }
+
+      const dur = Math.max(1, Math.floor((Date.now() - appSession.startedAtMs) / 1000));
+      const n = Math.max(1, appSession.sampleCount);
+      const avgEmg = Math.round(appSession.sumEmg / n);
+      const avgResMA = Math.round(appSession.sumResMA / n);
+      const avgPowerW = Number((appSession.sumPowerW / n).toFixed(2));
+      const maxPowerW = Number(appSession.maxPowerW.toFixed(2));
+      // Patient assist score: higher when motor draws less load while EMG is active
+      const loadSavings = Math.max(0, Math.min(100, Math.round(((260 - avgResMA) / 180) * 100)));
+      const patientAssistPct = Math.max(15, Math.min(95, Math.round(loadSavings * 0.65 + Math.min(100, avgEmg * 1.4) * 0.35)));
+
+      const completionPct = appSession.mode === 'time'
+        ? Math.min(100, Math.round((dur / (appSession.targetMinutes * 60)) * 100))
+        : Math.min(100, Math.round((appSession.repsDone / appSession.targetReps) * 100));
+
+      const nowDate = new Date();
+      const rec = {
+        id: 'rec-' + Date.now(),
+        timestampIso: nowDate.toISOString(),
+        dateLabel: nowDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }),
+        timeLabel: nowDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+        mode: appSession.mode,
+        targetLabel: appSession.mode === 'time' ? `${appSession.targetMinutes} นาที` : `${appSession.targetReps} ครั้ง`,
+        part: kinSelectedPart,
+        partLabel: PART_NAME_TH[kinSelectedPart] || kinSelectedPart,
+        durationSec: dur,
+        repsDone: appSession.repsDone,
+        targetReps: appSession.mode === 'reps' ? appSession.targetReps : 0,
+        completionPct,
+        avgEmg,
+        maxEmg: Math.round(appSession.maxEmg),
+        avgPowerW,
+        maxPowerW,
+        avgResMA,
+        maxResMA: Math.round(appSession.maxResMA),
+        patientAssistPct,
+        motorJamCount: appSession.motorJamCount,
+        emgSpikeCount: appSession.emgSpikeCount,
+        endReason,
+        source: hwSensorState.connected ? 'ESP32 RX จริง' : 'โหมดจำลอง',
+        timeline: appSession.timeline.length >= 2
+          ? appSession.timeline
+          : [
+              { t: 0, emg: avgEmg, resMA: avgResMA, powerW: avgPowerW },
+              { t: dur, emg: Math.round(appSession.maxEmg), resMA: Math.round(appSession.maxResMA), powerW: maxPowerW }
+            ]
+      };
+
+      appRecords.unshift(rec);
+      selectedRecordId = rec.id;
+      saveAppRecordsToStorage();
+      updateAppSessionProgressUI();
+
+      if (endReason === 'ครบโปรแกรม') {
+        playSessionCompleteChime();
+        switchAppTab('records');
+      } else {
+        renderAppRecordsDashboard();
+      }
+    }
+
+    function setRecordsFilter(filter) {
+      appRecordsFilter = filter;
+      ['all', 'time', 'reps', 'alert'].forEach(f => {
+        const el = document.getElementById('recFilter-' + f);
+        if (!el) return;
+        if (f === filter) {
+          el.className = 'px-3 py-1 rounded-xl text-xs font-bold bg-slate-900 text-white cursor-pointer';
+        } else if (f === 'alert') {
+          el.className = 'px-3 py-1 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 cursor-pointer';
+        } else {
+          el.className = 'px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 cursor-pointer';
+        }
+      });
+      renderRecordsList();
+    }
+
+    function selectAppRecord(id) {
+      selectedRecordId = id;
+      renderRecordsList();
+      const rec = appRecords.find(r => r.id === id) || appRecords[0];
+      if (rec) {
+        renderSelectedRecordDetails(rec);
+        drawSelectedSessionChart(rec);
+      }
+    }
+
+    function buildClinicalAnalysis(rec) {
+      const alerts = (rec.motorJamCount || 0) + (rec.emgSpikeCount || 0);
+      let summary = '';
+      if (alerts > 0) {
+        summary = `⚠️ ระหว่างรอบนี้ระบบตรวจพบเหตุฉุกเฉิน ${alerts} ครั้ง (${rec.endReason}) และตัดกำลังมอเตอร์ทันทีเพื่อความปลอดภัย — แนะนำตรวจสอบท่านอน/สายรัดและลดช่วงมุมหรือความเร็วในรอบถัดไป`;
+      } else if (rec.patientAssistPct >= 60) {
+        summary = `✅ การฟื้นตัวดีเยี่ยม! ผู้ป่วยช่วยออกแรงหมุนได้ถึง ${rec.patientAssistPct}% (EMG เฉลี่ย ${rec.avgEmg}%) ทำให้ Motor Power ลดเหลือเพียง ${rec.avgPowerW.toFixed(2)} W และไม่มีอาการเกร็งกระตุกหรือขัดมอเตอร์`;
+      } else if (rec.patientAssistPct >= 40) {
+        summary = `👍 ผู้ป่วยเริ่มมีส่วนร่วมออกแรงได้ดี (${rec.patientAssistPct}%) มอเตอร์ช่วยพยุงที่กำลังเฉลี่ย ${rec.avgPowerW.toFixed(2)} W (${rec.avgResMA} mA) การเคลื่อนไหวราบรื่นปลอดภัย แนะนำฝึกต่อเนื่องสม่ำเสมอ`;
+      } else {
+        summary = `🩺 รอบนี้เน้นโหมดมอเตอร์ช่วยพยุงเป็นหลัก (Motor Power เฉลี่ย ${rec.avgPowerW.toFixed(2)} W | แรงต้าน ${rec.avgResMA} mA) ไม่มีเหตุขัดข้อง เหมาะสำหรับระยะฟื้นฟูต้น`;
+      }
+      return summary;
+    }
+
+    function renderSelectedRecordDetails(rec) {
+      if (!rec) return;
+      const titleEl = document.getElementById('selectedRecTitle');
+      const subEl = document.getElementById('selectedRecSubtitle');
+      const badgeEl = document.getElementById('selectedRecBadge');
+      const metaEl = document.getElementById('selectedRecMeta');
+      const gridEl = document.getElementById('selectedRecMetricsGrid');
+      const textEl = document.getElementById('selectedRecClinicalText');
+
+      const hasAlert = (rec.motorJamCount + rec.emgSpikeCount) > 0;
+      if (titleEl) titleEl.innerText = `📊 ${rec.partLabel} (${rec.mode === 'time' ? '⏱️ จับเวลา' : '🔁 จับครั้ง'}: ${rec.targetLabel})`;
+      if (subEl) subEl.innerText = `${rec.dateLabel} เวลา ${rec.timeLabel} น. • แหล่งข้อมูล: ${rec.source}`;
+      if (badgeEl) {
+        badgeEl.innerText = rec.endReason;
+        badgeEl.className = hasAlert
+          ? 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 shrink-0'
+          : 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0';
+      }
+      if (metaEl) metaEl.innerText = `สำเร็จ ${rec.completionPct}% | ${formatMinSec(rec.durationSec)} | ${rec.repsDone} รอบ`;
+
+      if (gridEl) {
+        gridEl.innerHTML = `
+          <div class="bg-slate-950/70 rounded-xl p-2 border border-slate-700">
+            <span class="text-[9px] text-slate-400 font-sans block">EMG เฉลี่ย / สูงสุด</span>
+            <strong class="text-emerald-400">${rec.avgEmg}% / ${rec.maxEmg}%</strong>
+          </div>
+          <div class="bg-slate-950/70 rounded-xl p-2 border border-slate-700">
+            <span class="text-[9px] text-slate-400 font-sans block">Power เฉลี่ย / สูงสุด</span>
+            <strong class="text-sky-400">${rec.avgPowerW.toFixed(2)} / ${rec.maxPowerW.toFixed(2)} W</strong>
+          </div>
+          <div class="bg-slate-950/70 rounded-xl p-2 border border-slate-700">
+            <span class="text-[9px] text-slate-400 font-sans block">แรงต้าน เฉลี่ย / สูงสุด</span>
+            <strong class="text-orange-400">${rec.avgResMA} / ${rec.maxResMA} mA</strong>
+          </div>
+          <div class="bg-slate-950/70 rounded-xl p-2 border border-slate-700">
+            <span class="text-[9px] text-slate-400 font-sans block">คนไข้ช่วยออกแรง</span>
+            <strong class="text-amber-300">${rec.patientAssistPct}%</strong>
+          </div>
+        `;
+      }
+
+      if (textEl) textEl.innerText = buildClinicalAnalysis(rec);
+    }
+
+    function renderRecordsList() {
+      const container = document.getElementById('recordsListContainer');
+      if (!container) return;
+
+      const filtered = appRecords.filter(r => {
+        if (appRecordsFilter === 'time') return r.mode === 'time';
+        if (appRecordsFilter === 'reps') return r.mode === 'reps';
+        if (appRecordsFilter === 'alert') return (r.motorJamCount + r.emgSpikeCount) > 0;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-xs text-slate-400">ยังไม่มีรายการบันทึกในหมวดนี้</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(r => {
+        const isSel = r.id === selectedRecordId;
+        const hasAlert = (r.motorJamCount + r.emgSpikeCount) > 0;
+        return `
+          <button type="button" onclick="selectAppRecord('${r.id}')" class="w-full text-left p-3 rounded-2xl border-2 transition-all cursor-pointer ${isSel ? 'border-emerald-500 bg-emerald-50/70 shadow-sm' : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100'}">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <div class="flex items-center space-x-1.5 min-w-0">
+                <span class="text-sm">${r.mode === 'time' ? '⏱️' : '🔁'}</span>
+                <span class="text-xs font-extrabold text-slate-800 truncate">${r.partLabel} • ${r.targetLabel}</span>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${hasAlert ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">${r.endReason}</span>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 text-[10.5px] font-mono text-slate-500">
+              <span>${r.dateLabel} ${r.timeLabel} • ${formatMinSec(r.durationSec)} • ${r.repsDone} รอบ</span>
+              <span class="font-bold text-slate-700">EMG ${r.avgEmg}% | ${r.avgPowerW.toFixed(2)}W | ช่วย ${r.patientAssistPct}%</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function drawRecordsTrendChart() {
+      const canvas = document.getElementById('recordsTrendCanvas');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.parentElement && canvas.parentElement.clientWidth > 0) {
+        canvas.width = canvas.parentElement.clientWidth * dpr;
+        canvas.height = canvas.parentElement.clientHeight * dpr;
+      }
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      if (w === 0 || h === 0) return;
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      const cw = w / dpr, ch = h / dpr;
+
+      ctx.fillStyle = '#070d19';
+      ctx.fillRect(0, 0, cw, ch);
+
+      // Grid
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (let y = 26; y < ch - 20; y += 30) {
+        ctx.beginPath(); ctx.moveTo(28, y); ctx.lineTo(cw - 12, y); ctx.stroke();
+      }
+
+      // Chronological order (oldest -> newest, max last 10 sessions)
+      const list = appRecords.slice(0, 10).reverse();
+      if (list.length === 0) { ctx.restore(); return; }
+
+      const left = 30, right = cw - 16, top = 28, bottom = ch - 24;
+      const plotW = Math.max(10, right - left);
+      const plotH = Math.max(10, bottom - top);
+      const xOf = (i) => list.length === 1 ? (left + plotW * 0.5) : (left + (i / (list.length - 1)) * plotW);
+
+      const drawSeries = (getter, maxVal, color) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        list.forEach((rec, i) => {
+          const x = xOf(i);
+          const y = bottom - (Math.min(maxVal, getter(rec)) / maxVal) * plotH;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        list.forEach((rec, i) => {
+          const x = xOf(i);
+          const y = bottom - (Math.min(maxVal, getter(rec)) / maxVal) * plotH;
+          ctx.beginPath();
+          ctx.arc(x, y, 3.8, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      };
+
+      drawSeries(r => r.patientAssistPct || 0, 100, '#34d399'); // Assist %
+      drawSeries(r => r.avgEmg || 0, 100, '#fbbf24');           // Avg EMG %
+      drawSeries(r => r.avgPowerW || 0, 3.5, '#38bdf8');        // Avg Power W (0..3.5W)
+
+      // X-axis labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'center';
+      list.forEach((rec, i) => {
+        ctx.fillText(`#${i + 1}`, xOf(i), ch - 8);
+      });
+
+      ctx.restore();
+    }
+
+    function drawSelectedSessionChart(rec) {
+      const canvas = document.getElementById('recordsSessionDetailCanvas');
+      if (!canvas || !rec) return;
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.parentElement && canvas.parentElement.clientWidth > 0) {
+        canvas.width = canvas.parentElement.clientWidth * dpr;
+        canvas.height = canvas.parentElement.clientHeight * dpr;
+      }
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      if (w === 0 || h === 0) return;
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      const cw = w / dpr, ch = h / dpr;
+
+      ctx.fillStyle = '#070d19';
+      ctx.fillRect(0, 0, cw, ch);
+
+      const left = 12, right = cw - 12, top = 26, bottom = ch - 18;
+      const plotW = Math.max(10, right - left);
+      const plotH = Math.max(10, bottom - top);
+
+      // Grid + 600 mA safety line
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (let y = top; y <= bottom; y += 32) {
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+      }
+      const tripY = bottom - (600 / 1000) * plotH;
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(left, tripY); ctx.lineTo(right, tripY); ctx.stroke();
+      ctx.setLineDash([]);
+
+      const tl = Array.isArray(rec.timeline) && rec.timeline.length > 0 ? rec.timeline : [];
+      if (tl.length === 0) { ctx.restore(); return; }
+
+      const xOf = (i) => tl.length === 1 ? (left + plotW * 0.5) : (left + (i / (tl.length - 1)) * plotW);
+
+      const plotLine = (key, maxVal, color) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        tl.forEach((p, i) => {
+          const x = xOf(i);
+          const y = bottom - (Math.min(maxVal, p[key] || 0) / maxVal) * plotH;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      };
+
+      plotLine('emg', 100, '#34d399');
+      plotLine('resMA', 1000, '#fb923c');
+      plotLine('powerW', 5.0, '#38bdf8');
+
+      ctx.restore();
+    }
+
+    function renderAppRecordsDashboard() {
+      const totalSessions = appRecords.length;
+      const totalReps = appRecords.reduce((s, r) => s + (r.repsDone || 0), 0);
+      const totalSec = appRecords.reduce((s, r) => s + (r.durationSec || 0), 0);
+      const avgAssist = totalSessions > 0
+        ? Math.round(appRecords.reduce((s, r) => s + (r.patientAssistPct || 0), 0) / totalSessions)
+        : 0;
+      const totalAlerts = appRecords.reduce((s, r) => s + (r.motorJamCount || 0) + (r.emgSpikeCount || 0), 0);
+
+      const elS = document.getElementById('recKpiTotalSessions');
+      const elR = document.getElementById('recKpiTotalReps');
+      const elT = document.getElementById('recKpiTotalTime');
+      const elA = document.getElementById('recKpiAvgAssist');
+      const elE = document.getElementById('recKpiTotalAlerts');
+      if (elS) elS.innerText = String(totalSessions);
+      if (elR) elR.innerText = String(totalReps);
+      if (elT) elT.innerText = `รวม ${Math.round(totalSec / 60)} นาที`;
+      if (elA) elA.innerText = `${avgAssist}%`;
+      if (elE) elE.innerText = String(totalAlerts);
+
+      renderRecordsList();
+      const selected = appRecords.find(r => r.id === selectedRecordId) || appRecords[0];
+      if (selected) {
+        selectedRecordId = selected.id;
+        renderSelectedRecordDetails(selected);
+        setTimeout(() => {
+          drawRecordsTrendChart();
+          drawSelectedSessionChart(selected);
+        }, 30);
+      }
+    }
+
+    function exportAppRecordsCsv() {
+      if (appRecords.length === 0) {
+        alert('ยังไม่มีข้อมูลสำหรับส่งออก');
+        return;
+      }
+      const header = 'วันที่,เวลา,โหมด,เป้าหมาย,ส่วนที่บริหาร,ระยะเวลา(วินาที),จำนวนรอบ,สำเร็จ(%),EMGเฉลี่ย(%),EMGสูงสุด(%),Powerเฉลี่ย(W),Powerสูงสุด(W),แรงต้านเฉลี่ย(mA),แรงต้านสูงสุด(mA),คนไข้ช่วยออกแรง(%),ขัดมอเตอร์(ครั้ง),EMGกระตุก(ครั้ง),สถานะจบ,แหล่งข้อมูล';
+      const rows = appRecords.map(r => [
+        r.dateLabel, r.timeLabel, r.mode === 'time' ? 'จับเวลา' : 'จับจำนวนครั้ง',
+        r.targetLabel, r.partLabel, r.durationSec, r.repsDone, r.completionPct,
+        r.avgEmg, r.maxEmg, r.avgPowerW, r.maxPowerW, r.avgResMA, r.maxResMA,
+        r.patientAssistPct, r.motorJamCount, r.emgSpikeCount, r.endReason, r.source
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+      const csv = '\uFEFF' + [header, ...rows].join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `KineFlex-Rehab-Records-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function clearAllAppRecords() {
+      if (!confirm('ต้องการล้างประวัติการบันทึกกายภาพทั้งหมดในเครื่องนี้ใช่หรือไม่?')) return;
+      appRecords = [];
+      selectedRecordId = null;
+      saveAppRecordsToStorage();
+      renderAppRecordsDashboard();
+    }
+
+    window.addEventListener('resize', () => {
+      const vRec = document.getElementById('view-records');
+      if (vRec && !vRec.classList.contains('hidden')) {
+        drawRecordsTrendChart();
+        const sel = appRecords.find(r => r.id === selectedRecordId) || appRecords[0];
+        if (sel) drawSelectedSessionChart(sel);
+      }
+    });
+
+    // Initialize Mobile Rehab App Records & Session UI
+    loadAppRecords();
+    setAppSessionMode('time');
+    setAppTargetMinutes(5);
+    setAppTargetReps(15);
 
     // Initialize AI Kinematics Simulator on load
     setTimeout(() => {
