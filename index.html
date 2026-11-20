@@ -60,87 +60,80 @@
 
   <div id="appShell" class="mobile-shell studio-wide flex flex-col justify-between relative overflow-hidden pb-8">
     
-    <!-- Top Header -->
-    <header class="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white pt-5 pb-3 px-5 rounded-b-3xl shadow-lg relative z-20">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-9 h-9 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-inner">
+    <!-- Top Header (Clean & Essential Only) -->
+    <header class="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white py-3.5 px-4 md:px-5 rounded-b-3xl shadow-lg relative z-20">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-inner shrink-0">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <div>
+          <div class="min-w-0">
             <div class="flex items-center space-x-2">
-              <h1 class="font-bold text-base leading-tight">KineFlex AI Kinematics</h1>
-              <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono font-bold">CAD 680/370mm V-Arm</span>
+              <h1 class="font-extrabold text-base leading-tight truncate">KineFlex Smart Rehab</h1>
+              <span class="hidden sm:inline-block text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono font-bold">Live CAD + Safety</span>
             </div>
-            <p class="text-[11px] text-emerald-100 flex items-center">
-              <span id="aiStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse inline-block mr-1.5"></span>
-              <span id="aiStatusText">AI Neural Kinematics: พร้อมวิเคราะห์และสร้างท่าบริหาร 4 ส่วน</span>
+            <p class="text-[11px] text-emerald-100 flex items-center truncate">
+              <span id="aiStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse inline-block mr-1.5 shrink-0"></span>
+              <span id="aiStatusText" class="truncate">ระบบพร้อมทำงาน (EMG Guard + INA219 Motor Guard)</span>
             </p>
           </div>
         </div>
 
-        <!-- Emergency E-Stop Button -->
-        <button onclick="triggerEmergencyStop('กดปุ่มหยุดฉุกเฉิน (Manual E-Stop)')" class="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 active:scale-90 text-white text-xs font-bold rounded-2xl shadow-md flex items-center space-x-1 transition-all">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span>E-STOP</span>
-        </button>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Loud Emergency Alarm Toggle -->
+          <button type="button" id="btnAlarmToggle" onclick="toggleEmergencySoundEnabled()" class="px-2.5 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-bold rounded-xl border border-white/25 flex items-center space-x-1 transition-all cursor-pointer">
+            <span id="alarmToggleIcon">🔊</span>
+            <span id="alarmToggleText" class="hidden sm:inline">เสียงเตือน: เปิด</span>
+          </button>
+
+          <!-- Emergency E-Stop Button -->
+          <button type="button" onclick="triggerDashboardEmergency('MANUAL_ESTOP', 'กดปุ่มหยุดฉุกเฉิน (Manual E-Stop) — ตัดไฟมอเตอร์ทันที', 'both')" class="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 active:scale-90 text-white text-xs font-extrabold rounded-xl shadow-md flex items-center space-x-1 transition-all cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>E-STOP</span>
+          </button>
+        </div>
       </div>
 
-      <!-- Main Navigation Mode Switcher: AI 4-Part Kinematics vs Live Monitor vs Detailed Analytics -->
-      <div class="bg-black/25 p-1 rounded-2xl grid grid-cols-3 gap-1 mt-2 text-xs font-semibold">
-        <button onclick="switchView('kinematics')" id="viewBtn-kinematics" class="py-1.5 px-2 rounded-xl bg-white text-emerald-800 shadow-sm transition-all flex items-center justify-center space-x-1.5 font-bold">
-          <span>🧠</span>
-          <span>AI คิด & จำลองแขนกล 4 ส่วน</span>
-        </button>
-        <button onclick="switchView('live')" id="viewBtn-live" class="py-1.5 px-2 rounded-xl text-emerald-100 hover:text-white transition-all flex items-center justify-center space-x-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          <span>คุม & มอนิเตอร์คลื่นสด</span>
-        </button>
-        <button onclick="switchView('history')" id="viewBtn-history" class="py-1.5 px-2 rounded-xl text-emerald-100 hover:text-white transition-all flex items-center justify-center space-x-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          <span>วิเคราะห์ย้อนหลังละเอียด</span>
-        </button>
+      <!-- Hidden navigation buttons to preserve compatibility -->
+      <div class="hidden">
+        <button id="viewBtn-kinematics"></button>
+        <button id="viewBtn-live"></button>
+        <button id="viewBtn-history"></button>
       </div>
     </header>
 
-    <!-- ================= VIEW 0: AI KINEMATIC ANALYZER & 4-PART ROBOTIC ARM SIMULATOR ================= -->
-    <div id="view-kinematics" class="px-4 md:px-6 mt-3 space-y-4">
+    <!-- ================= VIEW 0: CLEAN SMART REHAB DASHBOARD ================= -->
+    <div id="view-kinematics" class="px-3 md:px-5 mt-3 space-y-3">
 
-      <!-- Top Banner: What this AI Simulator Demonstrates -->
-      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-950 text-white rounded-3xl p-4 shadow-lg border border-teal-500/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div class="space-y-1">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold flex items-center space-x-1">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-1"></span>
-              <span>AI Biomechanical & Inverse Kinematics Engine</span>
-            </span>
-            <span class="text-[11px] text-slate-300 font-mono">โครงสร้างจริง: เตียง 1900×900 mm | ก้านหลัก L₁ = 680 mm | รางสไลด์ L₂ = 370 mm</span>
+      <!-- FULL-WIDTH FLASHING EMERGENCY ALERT BANNER (Shown on EMG Spike OR Motor Jam/Overcurrent OR E-Stop) -->
+      <div id="liveEmergencyBanner" class="hidden bg-gradient-to-r from-rose-700 via-red-600 to-rose-700 text-white rounded-3xl p-4 shadow-xl border-2 border-red-300 alert-border">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div class="flex items-start space-x-3">
+            <div class="w-11 h-11 rounded-2xl bg-white text-red-600 flex items-center justify-center text-2xl font-black shrink-0 animate-bounce shadow-md">
+              🚨
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs md:text-sm font-black tracking-wide uppercase">EMERGENCY STOP — ตัดกำลังมอเตอร์ 0 N ทันที!</span>
+                <span id="emergencyCodePill" class="text-[10px] font-mono font-bold bg-black/35 px-2 py-0.5 rounded-full border border-white/30">OVERCURRENT_PEAK</span>
+              </div>
+              <p id="emergencyBannerReason" class="text-xs md:text-sm font-semibold text-red-50 mt-0.5">
+                ตรวจพบการขัดมอเตอร์ / แรงต้านเกินพิกัด — ระบบหยุดการทำงานเพื่อความปลอดภัยแล้ว
+              </p>
+            </div>
           </div>
-          <h2 class="text-sm md:text-base font-extrabold text-white">
-            ระบบจำลองสมองกล AI วิเคราะห์อาการผู้ป่วย ➔ คิดคำนวณองศาและสร้างการเคลื่อนไหวแขนกล 4 ส่วน (แขน • ขา • ข้อแขน • ข้อขา)
-          </h2>
-          <p class="text-xs text-slate-300 leading-relaxed">
-            เลือกส่วนที่ต้องการบริหาร หรือป้อนโจทย์อาการผู้ป่วย เพื่อให้ AI วิเคราะห์สรีรวิทยา คำนวณสมการ Inverse Kinematics ของก้านหมุน 680mm ร่วมกับรางสไลด์ 370mm และแสดงกระบวนการตัดสินใจแก้ปัญหาเฉพาะหน้าแบบเรียลไทม์
-          </p>
-        </div>
-
-        <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
-          <button type="button" onclick="triggerAIReanalysisWithAnimation()" class="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-extrabold text-xs rounded-2xl shadow-md mint-glow flex items-center space-x-1.5 transition-all cursor-pointer">
-            <span class="text-base">🧠</span>
-            <span>ให้ AI คิดวิเคราะห์ท่าใหม่</span>
-          </button>
-          <button type="button" onclick="toggleKinSimPlay()" id="btnKinPlayPause" class="px-4 py-2.5 bg-white text-slate-900 hover:bg-slate-100 active:scale-95 font-extrabold text-xs rounded-2xl shadow-md flex items-center space-x-1.5 transition-all cursor-pointer">
-            <span id="kinPlayIcon">⏸️</span>
-            <span id="kinPlayText">หยุดจำลองชั่วคราว</span>
-          </button>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="stopEmergencyAlarm()" class="px-3.5 py-2 bg-white text-red-700 hover:bg-red-50 active:scale-95 font-extrabold text-xs rounded-xl shadow-md cursor-pointer">
+              🔕 ปิดเสียงไซเรน
+            </button>
+            <button type="button" onclick="clearDashboardEmergency()" class="px-3.5 py-2 bg-slate-900/90 hover:bg-slate-950 text-white active:scale-95 font-extrabold text-xs rounded-xl shadow-md border border-white/25 cursor-pointer">
+              🔄 รีเซ็ตสถานะ
+            </button>
+          </div>
         </div>
       </div>
 
@@ -220,121 +213,33 @@
         </div>
       </div>
 
-      <!-- STEP 1: SELECT 4 TARGET BODY PARTS / JOINT MODES (Matching the User's Blue Sketch) -->
-      <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/90 space-y-3">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-          <div class="flex items-center space-x-2">
-            <span class="w-6 h-6 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">1</span>
-            <div>
-              <h3 class="text-xs md:text-sm font-extrabold text-slate-800">เลือกส่วนที่ให้ AI สร้างการเคลื่อนไหวบริหาร (4 ส่วนหลัก + โหมดประสาน)</h3>
-              <p class="text-[11px] text-slate-500">อ้างอิงตามแบบร่างวิศวกรรม: ก้านหมุนหลัก 680 mm + รางสไลด์หัวจับ 370 mm (บอลหนามสีฟ้า & ห่วงคล้องเท้า)</p>
-            </div>
-          </div>
-          <span id="activePartSummaryBadge" class="text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full self-start sm:self-auto">
-            โหมดปัจจุบัน: 1. บริหารแขน (Full Arm Arc)
-          </span>
+      <!-- COMPACT PART SELECTOR BAR -->
+      <div class="bg-white rounded-2xl p-2.5 shadow-sm border border-slate-200/90 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" onclick="selectKinematicPart('arm')" id="kinPartBtn-arm" class="px-3 py-1.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold text-xs transition-all cursor-pointer">
+            🦾 แขน
+          </button>
+          <button type="button" onclick="selectKinematicPart('leg')" id="kinPartBtn-leg" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-semibold text-xs transition-all cursor-pointer">
+            🦵 ขา
+          </button>
+          <button type="button" onclick="selectKinematicPart('elbow')" id="kinPartBtn-elbow" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-semibold text-xs transition-all cursor-pointer">
+            💪 ข้อแขน
+          </button>
+          <button type="button" onclick="selectKinematicPart('knee')" id="kinPartBtn-knee" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-semibold text-xs transition-all cursor-pointer">
+            🦶 ข้อขา
+          </button>
+          <button type="button" onclick="selectKinematicPart('all4')" id="kinPartBtn-all4" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-semibold text-xs transition-all cursor-pointer">
+            🤖 ครบ 4 ส่วน
+          </button>
         </div>
 
-        <!-- 5 Mode Cards: 1. แขน, 2. ขา, 3. ข้อแขน, 4. ข้อขา, 5. AI ประสานครบ 4 ส่วน -->
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-2.5">
-          <!-- Mode 1: แขน (Full Arm) -->
-          <button type="button" onclick="selectKinematicPart('arm')" id="kinPartBtn-arm" class="p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50/70 text-left transition-all cursor-pointer hover:shadow-md flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-extrabold text-emerald-900 flex items-center space-x-1">
-                  <span>🦾</span>
-                  <span>1. แขน (Full Arm)</span>
-                </span>
-                <span class="text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-600 text-white">680mm กวาดโค้ง</span>
-              </div>
-              <p class="text-[10.5px] text-slate-600 leading-snug">
-                ก้านหลัก 680mm หมุนกวาดมุมกว้าง (θ₁: 45°↔125°) พาแขนทั้งท่อนยกข้ามลำตัว-ศีรษะ บริหารหัวไหล่และแขน
-              </p>
-            </div>
-            <div class="mt-2 pt-1.5 border-t border-emerald-200/70 flex items-center justify-between text-[10px] font-mono text-emerald-800 font-bold">
-              <span>วิถี: โค้งกว้าง ↶</span>
-              <span>บอลหนามสีฟ้า</span>
-            </div>
-          </button>
-
-          <!-- Mode 2: ขา (Full Leg) -->
-          <button type="button" onclick="selectKinematicPart('leg')" id="kinPartBtn-leg" class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 text-left transition-all cursor-pointer hover:shadow-md flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-extrabold text-slate-800 flex items-center space-x-1">
-                  <span>🦵</span>
-                  <span>2. ขา (Full Leg)</span>
-                </span>
-                <span class="text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">ยกเฉียงขึ้น ↖</span>
-              </div>
-              <p class="text-[10.5px] text-slate-600 leading-snug">
-                ก้าน 680mm ประสานราง 370mm ดึงห่วงคล้องเท้ายกขาทั้งท่อนเฉียงขึ้น (Hip Flexion & Leg Lift) บริหารสะโพก-ต้นขา
-              </p>
-            </div>
-            <div class="mt-2 pt-1.5 border-t border-slate-200/70 flex items-center justify-between text-[10px] font-mono text-slate-600 font-bold">
-              <span>วิถี: เหยียดยกเฉียง ↖</span>
-              <span>ห่วงคล้องเท้า</span>
-            </div>
-          </button>
-
-          <!-- Mode 3: ข้อแขน (Elbow & Wrist Joint) -->
-          <button type="button" onclick="selectKinematicPart('elbow')" id="kinPartBtn-elbow" class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 text-left transition-all cursor-pointer hover:shadow-md flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-extrabold text-slate-800 flex items-center space-x-1">
-                  <span>💪</span>
-                  <span>3. ข้อแขน (Elbow/Wrist)</span>
-                </span>
-                <span class="text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">สไลด์ราง 370mm</span>
-              </div>
-              <p class="text-[10.5px] text-slate-600 leading-snug">
-                AI ล็อกก้าน 680mm นิ่ง แล้วเลื่อนหัวจับขึ้น-ลงตามราง 370mm (S₂: 70↔320mm) เพื่องอ-เหยียดข้อศอก 90° และข้อมือ
-              </p>
-            </div>
-            <div class="mt-2 pt-1.5 border-t border-slate-200/70 flex items-center justify-between text-[10px] font-mono text-slate-600 font-bold">
-              <span>วิถี: สไลด์แนวราง 370 ↕</span>
-              <span>เน้นข้อศอก-ข้อมือ</span>
-            </div>
-          </button>
-
-          <!-- Mode 4: ข้อขา (Knee & Ankle Joint) -->
-          <button type="button" onclick="selectKinematicPart('knee')" id="kinPartBtn-knee" class="p-3 rounded-2xl border border-slate-200 bg-slate-50/70 text-left transition-all cursor-pointer hover:shadow-md flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-extrabold text-slate-800 flex items-center space-x-1">
-                  <span>🦶</span>
-                  <span>4. ข้อขา (Knee/Ankle)</span>
-                </span>
-                <span class="text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">งอเข่า 90° ↰</span>
-              </div>
-              <p class="text-[10.5px] text-slate-600 leading-snug">
-                จัดท่าเข่างอ 90° ขับรางสไลด์ 370mm ประสานมุมก้าน 680mm ช่วงสั้น เพื่อดึง-เหยียดเฉพาะข้อเข่าและกระดกข้อเท้า
-              </p>
-            </div>
-            <div class="mt-2 pt-1.5 border-t border-slate-200/70 flex items-center justify-between text-[10px] font-mono text-slate-600 font-bold">
-              <span>วิถี: งอ-เหยียดเข่า 90° ↰</span>
-              <span>เน้นข้อเข่า-ข้อเท้า</span>
-            </div>
-          </button>
-
-          <!-- Mode 5: AI ประสานครบ 4 ส่วนอัตโนมัติ (All 4 Combined / AI Auto-Sequence) -->
-          <button type="button" onclick="selectKinematicPart('all4')" id="kinPartBtn-all4" class="col-span-2 lg:col-span-1 p-3 rounded-2xl border border-slate-200 bg-slate-50/70 text-left transition-all cursor-pointer hover:shadow-md flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-extrabold text-slate-800 flex items-center space-x-1">
-                  <span>🤖</span>
-                  <span>AI ครบ 4 ส่วน</span>
-                </span>
-                <span class="text-[9.5px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">Auto-4-Part</span>
-              </div>
-              <p class="text-[10.5px] text-slate-600 leading-snug">
-                AI วางลำดับบริหารทั้ง แขน • ขา • ข้อแขน • ข้อขา สลับและประสานกันอัตโนมัติตามความพร้อมของกล้ามเนื้อ
-              </p>
-            </div>
-            <div class="mt-2 pt-1.5 border-t border-slate-200/70 flex items-center justify-between text-[10px] font-mono text-indigo-700 font-bold">
-              <span>วิถี: สลับอัจฉริยะ 🔄</span>
-              <span>4 จุดพร้อมกัน</span>
-            </div>
+        <div class="flex items-center gap-2">
+          <span id="activePartSummaryBadge" class="hidden md:inline-block text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full">
+            1. บริหารแขน
+          </span>
+          <button type="button" onclick="toggleKinSimPlay()" id="btnKinPlayPause" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl flex items-center space-x-1 transition-all cursor-pointer">
+            <span id="kinPlayIcon">⏸️</span>
+            <span id="kinPlayText">หยุดจำลอง</span>
           </button>
         </div>
       </div>
@@ -408,271 +313,139 @@
               </div>
             </div>
 
-            <!-- Live Perturbation Test Bar ("ทดสอบให้เห็นว่า AI คิดแก้ปัญหาเฉพาะหน้าได้") -->
-            <div class="bg-gradient-to-r from-indigo-50 via-slate-50 to-emerald-50 rounded-2xl p-3 border border-indigo-200/80 space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold text-slate-800 flex items-center space-x-1.5">
-                  <span>⚡</span>
-                  <span>จำลองสถานการณ์แทรกซ้อนขณะเคลื่อนที่ (พิสูจน์ว่า AI คิดปรับวิถีแขนกลเองได้ทันที):</span>
-                </span>
-                <span id="perturbationStatusBadge" class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                  🟢 สภาวะปกติ (Optimal Trajectory)
-                </span>
-              </div>
-
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button type="button" onclick="triggerAIPerturbation('rom_limit')" id="btnPerturb-rom" class="py-2 px-2.5 rounded-xl bg-white hover:bg-amber-50 border border-amber-300 text-amber-900 font-bold text-[11px] shadow-2xs transition-all cursor-pointer flex items-center justify-center space-x-1">
-                  <span>🛑</span>
-                  <span>ผู้ป่วยติดขัด/เจ็บกลางทาง</span>
-                </button>
-                <button type="button" onclick="triggerAIPerturbation('spasm_spike')" id="btnPerturb-spasm" class="py-2 px-2.5 rounded-xl bg-white hover:bg-rose-50 border border-rose-300 text-rose-800 font-bold text-[11px] shadow-2xs transition-all cursor-pointer flex items-center justify-center space-x-1">
-                  <span>⚡</span>
-                  <span>กล้ามเนื้อเกร็งต้านกะทันหัน</span>
-                </button>
-                <button type="button" onclick="triggerAIPerturbation('patient_active')" id="btnPerturb-active" class="py-2 px-2.5 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 font-bold text-[11px] shadow-2xs transition-all cursor-pointer flex items-center justify-center space-x-1">
-                  <span>💪</span>
-                  <span>คนไข้ออกแรงช่วยเองได้ดี</span>
-                </button>
-                <button type="button" onclick="triggerAIPerturbation('normal')" id="btnPerturb-normal" class="py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-[11px] shadow-2xs transition-all cursor-pointer flex items-center justify-center space-x-1">
-                  <span>🔄</span>
-                  <span>คืนค่าวิถีปกติ</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- CARD B: 3D ISOMETRIC 4-ARM BED DIGITAL TWIN & KINEMATIC WAVEFORM GRAPH -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- 3D Isometric Digital Twin of the 1900x900 Bed with 4 V-Arms -->
-            <div class="bg-white rounded-3xl p-3.5 shadow-sm border border-slate-200/90 space-y-2">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h4 class="text-xs font-extrabold text-slate-800">🧊 มุมมอง 3D Isometric เตียงแขนกล 4 จุด</h4>
-                  <p class="text-[10px] text-slate-500">เตียง 1900×900 mm พร้อมก้าน V-Frame 4 มุม (ซ้าย-ขวา)</p>
-                </div>
-                <span class="text-[9.5px] font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg font-bold">3D Digital Twin</span>
-              </div>
-              <div class="h-48 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800">
-                <canvas id="iso3dBedCanvas" class="w-full h-full block"></canvas>
-                <div class="absolute left-2 top-1.5 text-[9.5px] font-mono text-emerald-300 bg-slate-900/80 px-2 py-0.5 rounded">
-                  4-Limb V-Linkage (L/R Arms & Legs)
+            <!-- Compact Real-Time Trajectory & Force Graph -->
+            <div class="pt-1 space-y-1.5">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="font-extrabold text-slate-700">📈 กราฟมุมแขนกล & แรงมอเตอร์สด</span>
+                <div class="flex items-center space-x-2 text-[9.5px] font-mono text-slate-500">
+                  <span class="text-cyan-600 font-bold">● θ₁</span>
+                  <span class="text-emerald-600 font-bold">● S₂</span>
+                  <span class="text-amber-600 font-bold">● แรงมอเตอร์</span>
                 </div>
               </div>
-            </div>
-
-            <!-- Real-time Kinematic Trajectory Curve Plot (Theta1, Slide2, Joint ROM) -->
-            <div class="bg-white rounded-3xl p-3.5 shadow-sm border border-slate-200/90 space-y-2">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h4 class="text-xs font-extrabold text-slate-800">📈 กราฟคำสั่งมอเตอร์ที่ AI สังเคราะห์สด</h4>
-                  <p class="text-[10px] text-slate-500">มุมก้าน 680mm (ฟ้า) vs สไลด์ราง 370mm (เขียว) vs แรงต้าน (ส้ม)</p>
-                </div>
-                <span id="kinCurveFormulaBadge" class="text-[9.5px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg font-bold">Min-Jerk Trajectory</span>
-              </div>
-              <div class="h-48 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800">
+              <div class="h-36 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800">
                 <canvas id="kinTrajectoryCanvas" class="w-full h-full block"></canvas>
-                <div class="absolute right-2 top-1.5 flex items-center space-x-2 text-[9px] font-mono bg-slate-900/80 px-2 py-0.5 rounded text-slate-300">
-                  <span class="text-cyan-400">● θ₁ (680mm)</span>
-                  <span class="text-emerald-400">● S₂ (370mm)</span>
-                  <span class="text-amber-400">● แรงต้าน</span>
-                </div>
               </div>
             </div>
           </div>
 
         </div>
 
-        <!-- RIGHT COLUMN (5 cols on lg): AI PATIENT ANALYZER + VISIBLE AI THINKING ENGINE -->
-        <div class="lg:col-span-5 space-y-4">
+        <!-- RIGHT COLUMN (5 cols on lg): DUAL SAFETY GUARD (MOTOR JAM + EMG SPASM) & EMERGENCY ALARM -->
+        <div class="lg:col-span-5 space-y-3">
 
-          <!-- CARD C: AI PATIENT CONDITION INPUT & SYMPTOM ANALYZER -->
+          <!-- DUAL SAFETY PROTECTION CARD -->
           <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/90 space-y-3">
             <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2">
-                <span class="w-6 h-6 rounded-xl bg-teal-600 text-white font-bold text-xs flex items-center justify-center">2</span>
-                <div>
-                  <h3 class="text-xs md:text-sm font-extrabold text-slate-800">ป้อนข้อมูลอาการผู้ป่วยให้ AI วิเคราะห์ (AI Input)</h3>
-                  <p class="text-[10.5px] text-slate-500">ปรับสภาพร่างกายผู้ป่วยแล้วดู AI คิดคำนวณเปลี่ยนองศาและระยะรางสไลด์</p>
+              <div>
+                <h3 class="text-xs md:text-sm font-extrabold text-slate-800 flex items-center space-x-1.5">
+                  <span>🛡️</span>
+                  <span>ระบบตัดหยุดฉุกเฉิน 2 ชั้น (Safety Guard)</span>
+                </h3>
+                <p class="text-[10.5px] text-slate-500">ตัดกำลังมอเตอร์ + เสียงไซเรนดังทันทีเมื่อขัดมอเตอร์หรือกล้ามเนื้อกระตุก</p>
+              </div>
+              <span id="perturbationStatusBadge" class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
+                🟢 ปกติ
+              </span>
+            </div>
+
+            <!-- 1. MOTOR OBSTRUCTION / OVERCURRENT GUARD (INA219) -->
+            <div id="safetyCardMotor" class="p-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 transition-all space-y-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">⚙️</span>
+                  <div>
+                    <h4 class="text-xs font-extrabold text-slate-800 leading-tight">1. กันขัดมอเตอร์ / แรงต้านเกิน (INA219)</h4>
+                    <span class="text-[10px] text-slate-500 font-mono">ตัดที่ ≥ 600 mA ต่อเนื่อง / ≥ 900 mA ทันที</span>
+                  </div>
                 </div>
+                <span id="safetyMotorBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white shrink-0">
+                  🟢 มอเตอร์ปกติ
+                </span>
+              </div>
+              <div class="flex items-center justify-between text-[11px] font-mono bg-white/80 rounded-xl px-2.5 py-1.5 border border-slate-200/80">
+                <span class="text-slate-500 font-sans">กระแส / แรงดัน:</span>
+                <span id="safetyMotorValue" class="font-extrabold text-slate-800">ปกติ (0.0 mA | 5.00 V)</span>
               </div>
             </div>
 
-            <!-- Clinical Patient Presets -->
-            <div>
-              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">เลือกเคสผู้ป่วยตัวอย่าง (Clinical Case Presets):</label>
-              <div class="grid grid-cols-2 gap-1.5 text-[11px]">
-                <button type="button" onclick="applyPatientPreset('stroke')" id="presetBtn-stroke" class="p-2 rounded-xl border-2 border-emerald-500 bg-emerald-50/70 text-emerald-900 font-bold text-left transition-all cursor-pointer">
-                  🧠 เคส 1: อัมพฤกษ์ครึ่งซีก (Stroke ฟื้นฟูระยะกลาง)
-                </button>
-                <button type="button" onclick="applyPatientPreset('stiff')" id="presetBtn-stiff" class="p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-left transition-all cursor-pointer">
-                  🦴 เคส 2: ผู้สูงอายุข้อไหล่-ข้อเข่าติดแข็ง (ROM จำกัด)
-                </button>
-                <button type="button" onclick="applyPatientPreset('postop')" id="presetBtn-postop" class="p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-left transition-all cursor-pointer">
-                  🏥 เคส 3: ผู้สูงอายุติดเตียงที่ไม่สามารถช่วยเหลือตนเองได้ (Bedridden Elderly)
-                </button>
-                <button type="button" onclick="applyPatientPreset('spastic')" id="presetBtn-spastic" class="p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-left transition-all cursor-pointer">
-                  ⚡ เคส 4: ผู้สูงอายุที่มีภาวะกล้ามเนื้อลีบและกำลังกล้ามเนื้อลดลงจากการไม่ได้ใช้งาน (Disuse Muscle Atroph)
-                </button>
+            <!-- 2. EMG SPASM GUARD (ESP-NOW TX) -->
+            <div id="safetyCardEmg" class="p-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 transition-all space-y-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">⚡</span>
+                  <div>
+                    <h4 class="text-xs font-extrabold text-slate-800 leading-tight">2. กันกล้ามเนื้อกระตุก (EMG Spasm Guard)</h4>
+                    <span class="text-[10px] text-slate-500 font-mono">ตัดเมื่อ EMG Spike หรือเกร็ง ≥ 85%</span>
+                  </div>
+                </div>
+                <span id="safetyEmgBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white shrink-0">
+                  🟢 กล้ามเนื้อปกติ
+                </span>
+              </div>
+              <div class="flex items-center justify-between text-[11px] font-mono bg-white/80 rounded-xl px-2.5 py-1.5 border border-slate-200/80">
+                <span class="text-slate-500 font-sans">สัญญาณ EMG / Base:</span>
+                <span id="safetyEmgValue" class="font-extrabold text-slate-800">รอสัญญาณ TX / ปกติ</span>
               </div>
             </div>
 
-            <!-- Interactive Sliders for AI Parameters -->
-            <div class="space-y-2.5 bg-slate-50 p-3 rounded-2xl border border-slate-200/80 text-xs">
-              <!-- Slider 1: Muscle Power Grade (0 - 5) -->
-              <div>
-                <div class="flex justify-between items-center mb-0.5">
-                  <span class="font-bold text-slate-700 text-[11px]">💪 กำลังกล้ามเนื้อผู้ป่วย (Muscle Grade 0–5):</span>
-                  <span id="lblAiMuscleGrade" class="font-mono font-bold text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-200 text-[11px]">Grade 2 (ออกแรงช่วยได้บางส่วน)</span>
-                </div>
-                <input id="sliderAiMuscleGrade" type="range" min="0" max="5" step="1" value="2" oninput="onAiParamSliderChange()" class="w-full accent-emerald-600 cursor-pointer">
-              </div>
-
-              <!-- Slider 2: Joint Stiffness / Pain Limit (ROM Ceiling %) -->
-              <div>
-                <div class="flex justify-between items-center mb-0.5">
-                  <span class="font-bold text-slate-700 text-[11px]">📐 เพดานมุมข้อต่อที่ไม่เจ็บ (Safe ROM Limit):</span>
-                  <span id="lblAiRomLimit" class="font-mono font-bold text-blue-700 bg-white px-2 py-0.5 rounded border border-blue-200 text-[11px]">85% ของระยะสูงสุด</span>
-                </div>
-                <input id="sliderAiRomLimit" type="range" min="40" max="100" step="5" value="85" oninput="onAiParamSliderChange()" class="w-full accent-blue-600 cursor-pointer">
-              </div>
-
-              <!-- Slider 3: Muscle Spasticity / Resistance Tone -->
-              <div>
-                <div class="flex justify-between items-center mb-0.5">
-                  <span class="font-bold text-slate-700 text-[11px]">⚡ ความตึงตัวกล้ามเนื้อตั้งต้น (Spasticity Tone):</span>
-                  <span id="lblAiSpasmTone" class="font-mono font-bold text-amber-700 bg-white px-2 py-0.5 rounded border border-amber-200 text-[11px]">15% (ตึงตัวเล็กน้อย)</span>
-                </div>
-                <input id="sliderAiSpasmTone" type="range" min="0" max="65" step="5" value="15" oninput="onAiParamSliderChange()" class="w-full accent-amber-500 cursor-pointer">
-              </div>
-            </div>
-
-            <!-- Free-Text Clinical Symptom Prompt for AI Analysis -->
-            <div class="space-y-1.5">
-              <label class="text-[10.5px] font-bold text-slate-600 block">
-                💬 พิมพ์โจทย์อาการผู้ป่วยให้ AI วิเคราะห์ท่า (เช่น "ยกแขนสูงแล้วเจ็บไหล่ เน้นข้อแขนก่อน"):
-              </label>
-              <div class="flex gap-1.5">
-                <input id="aiSymptomPromptInput" type="text" placeholder="พิมพ์อาการ เช่น คนไข้ข้อศอกตึง ยกแขนได้ไม่สุด..." value="ผู้ป่วยยกแขนสูงเกิน 95° แล้วตึงไหล่ แต่ข้อศอกและข้อเข่าพร้อมฝึกเคลื่อนไหว" class="flex-1 text-xs px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 focus:bg-white focus:border-emerald-500 focus:outline-none">
-                <button type="button" onclick="triggerAIReanalysisWithAnimation()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer">
-                  🧠 AI วิเคราะห์
+            <!-- EMERGENCY & SIREN TEST BUTTONS -->
+            <div class="pt-1 border-t border-slate-100 space-y-2">
+              <span class="text-[10.5px] font-extrabold text-slate-600 block">🧪 ทดสอบระบบหยุดฉุกเฉิน & เสียงเตือนดัง:</span>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="simulateMotorJamEmergency()" class="py-2.5 px-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 active:scale-95 border-2 border-amber-400 text-amber-950 font-extrabold text-[11px] shadow-2xs transition-all cursor-pointer flex items-center justify-center space-x-1">
+                  <span>⚙️</span>
+                  <span>ทดสอบขัดมอเตอร์</span>
+                </button>
+                <button type="button" onclick="simulateEmgSpikeEmergency()" class="py-2.5 px-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 active:scale-95 border-2 border-rose-400 text-rose-900 font-extrabold text-[11px] shadow-2xs transition-all cursor-pointer flex items-center justify-center space-x-1">
+                  <span>⚡</span>
+                  <span>ทดสอบ EMG กระตุก</span>
+                </button>
+                <button type="button" onclick="testLoudEmergencySiren()" class="py-2 px-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 active:scale-95 border border-indigo-300 text-indigo-900 font-bold text-[11px] transition-all cursor-pointer flex items-center justify-center space-x-1">
+                  <span>🔊</span>
+                  <span>ทดสอบเสียงไซเรน</span>
+                </button>
+                <button type="button" onclick="clearDashboardEmergency()" class="py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold text-[11px] transition-all cursor-pointer flex items-center justify-center space-x-1">
+                  <span>🔄</span>
+                  <span>คืนค่าปกติ / ปิดเสียง</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- CARD D: VISIBLE AI THINKING PIPELINE & CHAIN-OF-THOUGHT TERMINAL -->
-          <div class="bg-slate-900 text-white rounded-3xl p-4 shadow-xl border border-slate-700 space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <div class="flex items-center space-x-2">
-                <span class="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-md ai-thinking-glow">
-                  AI
-                </span>
-                <div>
-                  <h3 class="text-xs md:text-sm font-extrabold text-white flex items-center space-x-1.5">
-                    <span>กระบวนการคิดของ AI (Chain-of-Thought & Kinematics)</span>
-                  </h3>
-                  <p id="aiBrainStateSub" class="text-[10.5px] text-emerald-400 font-mono">
-                    สถานะสมองกล: กำลังประมวลผล Inverse Kinematics แบบ Real-Time (100 Hz)
-                  </p>
-                </div>
-              </div>
-              <span id="aiConfidenceBadge" class="text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-full">
-                Confidence: 98.4%
-              </span>
+          <!-- COMPACT EVENT LOG -->
+          <div class="bg-slate-900 text-white rounded-3xl p-3.5 shadow-md border border-slate-700 space-y-2">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-extrabold text-slate-200">📋 บันทึกเหตุการณ์ความปลอดภัยล่าสุด</span>
+              <span class="font-mono text-[10px] text-emerald-400">● LIVE LOG</span>
             </div>
-
-            <!-- 4-Step Visual Reasoning Pipeline Nodes -->
-            <div class="grid grid-cols-4 gap-1.5 text-center font-mono text-[10px]">
-              <div id="aiNode-1" class="p-2 rounded-xl bg-slate-800/90 border border-emerald-500/60 text-emerald-300 transition-all">
-                <div class="font-bold font-sans text-[10px]">1. ประเมินสรีระ</div>
-                <div id="aiNodeVal-1" class="text-[9px] text-slate-300 mt-0.5">EMG + ROM</div>
-              </div>
-              <div id="aiNode-2" class="p-2 rounded-xl bg-slate-800/90 border border-cyan-500/60 text-cyan-300 transition-all">
-                <div class="font-bold font-sans text-[10px]">2. คำนวณ IK</div>
-                <div id="aiNodeVal-2" class="text-[9px] text-slate-300 mt-0.5">L₁=680, L₂=370</div>
-              </div>
-              <div id="aiNode-3" class="p-2 rounded-xl bg-slate-800/90 border border-amber-500/60 text-amber-300 transition-all">
-                <div class="font-bold font-sans text-[10px]">3. สร้างวิถีโค้ง</div>
-                <div id="aiNodeVal-3" class="text-[9px] text-slate-300 mt-0.5">Min-Jerk Path</div>
-              </div>
-              <div id="aiNode-4" class="p-2 rounded-xl bg-slate-800/90 border border-indigo-400/60 text-indigo-300 transition-all">
-                <div class="font-bold font-sans text-[10px]">4. คุมแรง AAN</div>
-                <div id="aiNodeVal-4" class="text-[9px] text-slate-300 mt-0.5">PID Impedance</div>
-              </div>
-            </div>
-
-            <!-- AI Synthesized Kinematic Prescription Table for the 4 Parts -->
-            <div class="bg-slate-950/90 rounded-2xl p-3 border border-slate-800 space-y-2 text-[11px]">
-              <div class="flex items-center justify-between text-[10.5px] text-slate-400 border-b border-slate-800 pb-1">
-                <span class="font-bold text-emerald-300">📋 พารามิเตอร์แขนกลที่ AI คิดและสั่งงาน:</span>
-                <span id="aiPrescriptionPartTag" class="font-mono text-cyan-300">ส่วนที่ 1: แขน (Full Arm)</span>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2 font-mono text-[10.5px]">
-                <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
-                  <span class="text-slate-400 font-sans text-[9.5px] block">มุมหมุนก้านหลัก 680mm (θ₁):</span>
-                  <span id="aiPlanThetaRange" class="font-bold text-cyan-300 text-xs">46° ↔ 118° (กวาดวงกว้าง)</span>
-                </div>
-                <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
-                  <span class="text-slate-400 font-sans text-[9.5px] block">ระยะสไลด์ราง 370mm (S₂):</span>
-                  <span id="aiPlanSlideRange" class="font-bold text-emerald-300 text-xs">175 ↔ 295 mm (ประคองโค้ง)</span>
-                </div>
-                <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
-                  <span class="text-slate-400 font-sans text-[9.5px] block">ความเร็ว & จังหวะที่ AI ตั้ง:</span>
-                  <span id="aiPlanTempo" class="font-bold text-amber-300 text-xs">3.2 วิ/รอบ (นุ่มนวล)</span>
-                </div>
-                <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
-                  <span class="text-slate-400 font-sans text-[9.5px] block">สัดส่วนแรงช่วย AI vs คนไข้:</span>
-                  <span id="aiPlanAssistRatio" class="font-bold text-indigo-300 text-xs">AI ช่วย 65% | คนไข้ 35%</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Live Streaming Chain-of-Thought Reasoning Log -->
-            <div class="space-y-1">
-              <div class="flex items-center justify-between text-[10px] text-slate-400">
-                <span class="font-bold text-slate-300">💬 บันทึกความคิดและการตัดสินใจของ AI สด (Live Reasoning Log):</span>
-                <span class="font-mono text-emerald-400 animate-pulse">● LIVE THINKING</span>
-              </div>
-              <div id="aiThinkingLogContainer" class="h-44 overflow-y-auto bg-slate-950 rounded-2xl p-3 border border-slate-800 font-mono text-[11px] space-y-2 leading-relaxed text-slate-300">
-                <!-- Populated dynamically by AI Reasoning Engine -->
-              </div>
+            <div id="aiThinkingLogContainer" class="h-36 overflow-y-auto bg-slate-950 rounded-2xl p-2.5 border border-slate-800 font-mono text-[10.5px] space-y-1.5 leading-relaxed text-slate-300">
             </div>
           </div>
 
         </div>
       </div>
 
-      <!-- COLLAPSIBLE REFERENCE SECTION: ORIGINAL ENGINEERING DRAWINGS & 4-PART BLUE SKETCH -->
-      <details class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/90 group">
-        <summary class="text-xs md:text-sm font-extrabold text-slate-800 cursor-pointer flex items-center justify-between list-none">
-          <div class="flex items-center space-x-2">
-            <span class="text-base">📐</span>
-            <span>เปรียบเทียบกับภาพแบบร่างวิศวกรรมต้นฉบับ (CAD 1900×900mm, ก้าน 680/370mm & เส้นร่างการเคลื่อนไหว 4 ส่วน)</span>
-          </div>
-          <span class="text-[11px] text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 font-bold group-open:bg-emerald-600 group-open:text-white transition-all">
-            คลิกเพื่อดูภาพต้นฉบับ ▾
-          </span>
-        </summary>
-
-        <div class="pt-3 mt-3 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-1.5">
-            <span class="text-[11px] font-bold text-slate-800 block">1. เส้นร่างการเคลื่อนไหว 4 ส่วน (แขน, ขา, ข้อแขน, ข้อขา)</span>
-            <img src="cad_motion_sketch_4parts.png" alt="4-Part Motion Sketch" class="w-full h-44 object-contain bg-white rounded-xl border border-slate-200 p-1">
-            <p class="text-[10px] text-slate-500">ภาพบน: บริหารแขน (กวาดโค้ง 680mm) & ขา (ยกเฉียงขึ้น) | ภาพล่าง: บริหารข้อแขน (สไลด์ราง 370mm) & ข้อขา (งอเข่า 90°)</p>
-          </div>
-          <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-1.5">
-            <span class="text-[11px] font-bold text-slate-800 block">2. แบบวิศวกรรม CAD ระบุสเกล (680mm / 370mm / 1900×900mm)</span>
-            <img src="cad_blueprint_dimensions.png" alt="CAD Dimensions" class="w-full h-44 object-contain bg-white rounded-xl border border-slate-200 p-1">
-            <p class="text-[10px] text-slate-500">โครงสร้างเตียง 4 ตอน (770 + 260 + 370 + 480 = 1900 mm) กว้าง 900 mm และก้าน V-Arm 680 / 370 mm</p>
-          </div>
-          <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-1.5">
-            <span class="text-[11px] font-bold text-slate-800 block">3. ภาพโครงสร้าง 3D ตอนใช้งานจริงกับผู้ป่วย</span>
-            <img src="cad_structure_overview.png" alt="3D Structure Overview" class="w-full h-44 object-contain bg-white rounded-xl border border-slate-200 p-1">
-            <p class="text-[10px] text-slate-500">มือจับลูกบอลหนามสีฟ้า + สายรัดข้อมือวัดคลื่นกล้ามเนื้อ และห่วงคล้องเท้าคู่ล่าง</p>
-          </div>
-        </div>
-      </details>
+      <!-- Hidden compatibility stubs for legacy AI prescription DOM IDs -->
+      <div class="hidden" aria-hidden="true">
+        <canvas id="iso3dBedCanvas"></canvas>
+        <input id="sliderAiMuscleGrade" type="range" value="2">
+        <input id="sliderAiRomLimit" type="range" value="85">
+        <input id="sliderAiSpasmTone" type="range" value="15">
+        <input id="aiSymptomPromptInput" type="text" value="">
+        <span id="lblAiMuscleGrade"></span>
+        <span id="lblAiRomLimit"></span>
+        <span id="lblAiSpasmTone"></span>
+        <span id="aiPrescriptionPartTag"></span>
+        <span id="aiPlanThetaRange"></span>
+        <span id="aiPlanSlideRange"></span>
+        <span id="aiPlanTempo"></span>
+        <span id="aiPlanAssistRatio"></span>
+        <span id="aiNodeVal-1"></span>
+        <span id="aiNodeVal-2"></span>
+        <span id="aiNodeVal-3"></span>
+        <span id="aiNodeVal-4"></span>
+      </div>
 
     </div>
 
@@ -3931,21 +3704,20 @@
       parts.forEach(p => {
         const btn = document.getElementById('kinPartBtn-' + p);
         if (!btn) return;
-        const spanCol = (p === 'all4') ? 'col-span-2 lg:col-span-1 ' : '';
         if (p === part) {
-          btn.className = spanCol + "p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50/80 text-left transition-all cursor-pointer shadow-sm flex flex-col justify-between scale-[1.01]";
+          btn.className = "px-3 py-1.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold text-xs transition-all cursor-pointer";
         } else {
-          btn.className = spanCol + "p-3 rounded-2xl border border-slate-200 bg-slate-50/70 text-left transition-all cursor-pointer hover:shadow-md flex flex-col justify-between opacity-85 hover:opacity-100";
+          btn.className = "px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-semibold text-xs transition-all cursor-pointer";
         }
       });
 
       const cfg = PART_CONFIGS[part];
       const badge = document.getElementById('activePartSummaryBadge');
       if (badge && cfg) {
-        badge.innerText = 'โหมดปัจจุบัน: ' + cfg.title;
+        badge.innerText = cfg.shortTag || cfg.title;
       }
 
-      updateAIReasoningAndPrescription(true);
+      updateAIReasoningAndPrescription(false);
     }
 
     function applyPatientPreset(preset) {
@@ -4682,8 +4454,10 @@
         ctx.stroke();
       });
 
-      // 6. OVERLAY 1: BLUE SKETCH TRAJECTORY ARROWS (เปลี่ยนเป็นสีแดงกะพริบทันทีเมื่อเกิดเหตุฉุกเฉินจากเซนเซอร์จริง!)
-      const isHwEmergency = typeof hwSensorState !== 'undefined' && hwSensorState.connected && hwSensorState.isEmergency;
+      // 6. OVERLAY 1: BLUE SKETCH TRAJECTORY ARROWS (เปลี่ยนเป็นสีแดงกะพริบทันทีเมื่อเกิดเหตุฉุกเฉินจากเซนเซอร์จริงหรือขัดมอเตอร์!)
+      const isHwEmergency =
+        (typeof hwSensorState !== 'undefined' && hwSensorState.connected && hwSensorState.isEmergency) ||
+        (typeof dashboardEmergency !== 'undefined' && dashboardEmergency.active);
       const emergencyBlinkOn = Math.floor(Date.now() / 220) % 2 === 0;
       const emergencyRed = emergencyBlinkOn ? '#ef4444' : '#fca5a5';
 
@@ -5191,6 +4965,354 @@
       }
     }
 
+    // ============================================================================
+    // LOUD EMERGENCY SIREN ALARM ENGINE (Web Audio API + Thai Voice Alert)
+    // Works on iPhone Safari, Android Chrome, and PC without external audio files
+    // ============================================================================
+    const dashboardEmergency = {
+      active: false,
+      code: '',
+      reason: '',
+      source: 'none' // 'motor' | 'emg' | 'both' | 'none'
+    };
+
+    const emergencyAlarm = {
+      enabled: true,
+      ringing: false,
+      ctx: null,
+      sirenTimer: null,
+      voiceTimer: null,
+      step: 0
+    };
+
+    function ensureAlarmAudioContext() {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      if (!emergencyAlarm.ctx) {
+        emergencyAlarm.ctx = new AudioCtx();
+      }
+      if (emergencyAlarm.ctx.state === 'suspended') {
+        emergencyAlarm.ctx.resume().catch(() => {});
+      }
+      return emergencyAlarm.ctx;
+    }
+
+    // Unlock audio automatically on first tap/click (critical for iOS Safari & Android Chrome)
+    ['pointerdown', 'touchstart', 'click'].forEach((evt) => {
+      window.addEventListener(evt, () => {
+        ensureAlarmAudioContext();
+      }, { once: true, passive: true });
+    });
+
+    function playLoudSirenPulse() {
+      if (!emergencyAlarm.enabled) return;
+      const ctx = ensureAlarmAudioContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+      const duration = 0.28;
+      const highTone = (emergencyAlarm.step % 2 === 0);
+      emergencyAlarm.step++;
+
+      const baseFreq = highTone ? 1380 : 880;
+      const harmFreq = highTone ? 2760 : 1760;
+
+      // DynamicsCompressor pushes perceived loudness to maximum safely
+      const compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.setValueAtTime(-12, now);
+      compressor.knee.setValueAtTime(10, now);
+      compressor.ratio.setValueAtTime(12, now);
+      compressor.attack.setValueAtTime(0.002, now);
+      compressor.release.setValueAtTime(0.1, now);
+      compressor.connect(ctx.destination);
+
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.001, now);
+      masterGain.gain.linearRampToValueAtTime(0.95, now + 0.015);
+      masterGain.gain.setValueAtTime(0.95, now + duration - 0.04);
+      masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      masterGain.connect(compressor);
+
+      // Primary sawtooth siren oscillator
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(baseFreq, now);
+      osc1.frequency.linearRampToValueAtTime(highTone ? 1560 : 760, now + duration);
+      osc1.connect(masterGain);
+
+      // Secondary square harmonic for piercing clarity on phone speakers
+      const osc2 = ctx.createOscillator();
+      const osc2Gain = ctx.createGain();
+      osc2Gain.gain.setValueAtTime(0.65, now);
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(harmFreq, now);
+      osc2.connect(osc2Gain);
+      osc2Gain.connect(masterGain);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + duration + 0.02);
+      osc2.stop(now + duration + 0.02);
+    }
+
+    function speakThaiEmergency(text) {
+      if (!emergencyAlarm.enabled || !('speechSynthesis' in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'th-TH';
+        u.rate = 1.08;
+        u.volume = 1.0;
+        window.speechSynthesis.speak(u);
+      } catch (_) {}
+    }
+
+    function startEmergencyAlarm(voiceText = 'ฉุกเฉิน หยุดมอเตอร์ทันที') {
+      if (!emergencyAlarm.enabled) return;
+      ensureAlarmAudioContext();
+      if (emergencyAlarm.ringing) return;
+
+      emergencyAlarm.ringing = true;
+      emergencyAlarm.step = 0;
+      playLoudSirenPulse();
+      emergencyAlarm.sirenTimer = setInterval(playLoudSirenPulse, 320);
+
+      // Vibrate mobile phone if supported (Android)
+      if (navigator.vibrate) {
+        try { navigator.vibrate([400, 150, 400, 150, 600]); } catch (_) {}
+      }
+
+      speakThaiEmergency(voiceText);
+      emergencyAlarm.voiceTimer = setInterval(() => {
+        if (emergencyAlarm.ringing && emergencyAlarm.enabled) {
+          speakThaiEmergency(voiceText);
+        }
+      }, 4500);
+    }
+
+    function stopEmergencyAlarm() {
+      emergencyAlarm.ringing = false;
+      if (emergencyAlarm.sirenTimer) {
+        clearInterval(emergencyAlarm.sirenTimer);
+        emergencyAlarm.sirenTimer = null;
+      }
+      if (emergencyAlarm.voiceTimer) {
+        clearInterval(emergencyAlarm.voiceTimer);
+        emergencyAlarm.voiceTimer = null;
+      }
+      if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch (_) {}
+      }
+      if (navigator.vibrate) {
+        try { navigator.vibrate(0); } catch (_) {}
+      }
+    }
+
+    function toggleEmergencySoundEnabled() {
+      ensureAlarmAudioContext();
+      emergencyAlarm.enabled = !emergencyAlarm.enabled;
+      const icon = document.getElementById('alarmToggleIcon');
+      const txt = document.getElementById('alarmToggleText');
+      const btn = document.getElementById('btnAlarmToggle');
+      if (emergencyAlarm.enabled) {
+        if (icon) icon.innerText = '🔊';
+        if (txt) txt.innerText = 'เสียงเตือน: เปิด';
+        if (btn) btn.className = 'px-2.5 py-1.5 bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-bold rounded-xl border border-white/25 flex items-center space-x-1 transition-all cursor-pointer';
+      } else {
+        stopEmergencyAlarm();
+        if (icon) icon.innerText = '🔇';
+        if (txt) txt.innerText = 'เสียงเตือน: ปิด';
+        if (btn) btn.className = 'px-2.5 py-1.5 bg-slate-900/60 hover:bg-slate-900/80 active:scale-95 text-slate-200 text-xs font-bold rounded-xl border border-white/20 flex items-center space-x-1 transition-all cursor-pointer';
+      }
+    }
+
+    function testLoudEmergencySiren() {
+      emergencyAlarm.enabled = true;
+      const icon = document.getElementById('alarmToggleIcon');
+      const txt = document.getElementById('alarmToggleText');
+      if (icon) icon.innerText = '🔊';
+      if (txt) txt.innerText = 'เสียงเตือน: เปิด';
+
+      stopEmergencyAlarm();
+      startEmergencyAlarm('ทดสอบเสียงแจ้งเตือนฉุกเฉิน ระบบหยุดมอเตอร์พร้อมทำงาน');
+      setTimeout(() => {
+        if (!dashboardEmergency.active && !hwSensorState.isEmergency) {
+          stopEmergencyAlarm();
+        }
+      }, 2200);
+    }
+
+    function updateDualSafetyCards({ motorFault = false, motorWarn = false, motorText = '', emgFault = false, emgText = '' }) {
+      const mCard = document.getElementById('safetyCardMotor');
+      const mBadge = document.getElementById('safetyMotorBadge');
+      const mVal = document.getElementById('safetyMotorValue');
+
+      if (mCard && mBadge) {
+        if (motorFault) {
+          mCard.className = 'p-3 rounded-2xl border-2 border-red-500 bg-red-50 alert-border transition-all space-y-1.5';
+          mBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-600 text-white animate-pulse shrink-0';
+          mBadge.innerText = '🚨 ขัดมอเตอร์ — ตัดไฟแล้ว!';
+        } else if (motorWarn) {
+          mCard.className = 'p-3 rounded-2xl border-2 border-amber-400 bg-amber-50 transition-all space-y-1.5';
+          mBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500 text-white shrink-0';
+          mBadge.innerText = '⚠️ แรงต้านสูง (ใกล้เกณฑ์ตัด)';
+        } else {
+          mCard.className = 'p-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 transition-all space-y-1.5';
+          mBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white shrink-0';
+          mBadge.innerText = '🟢 มอเตอร์ปกติ';
+        }
+      }
+      if (mVal && motorText) mVal.innerText = motorText;
+
+      const eCard = document.getElementById('safetyCardEmg');
+      const eBadge = document.getElementById('safetyEmgBadge');
+      const eVal = document.getElementById('safetyEmgValue');
+
+      if (eCard && eBadge) {
+        if (emgFault) {
+          eCard.className = 'p-3 rounded-2xl border-2 border-red-500 bg-red-50 alert-border transition-all space-y-1.5';
+          eBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-600 text-white animate-pulse shrink-0';
+          eBadge.innerText = '🚨 กล้ามเนื้อกระตุก — หยุดแล้ว!';
+        } else {
+          eCard.className = 'p-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 transition-all space-y-1.5';
+          eBadge.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white shrink-0';
+          eBadge.innerText = '🟢 กล้ามเนื้อปกติ';
+        }
+      }
+      if (eVal && emgText) eVal.innerText = emgText;
+    }
+
+    function showEmergencyBanner(code, reason) {
+      const banner = document.getElementById('liveEmergencyBanner');
+      const pill = document.getElementById('emergencyCodePill');
+      const desc = document.getElementById('emergencyBannerReason');
+      if (banner) banner.classList.remove('hidden');
+      if (pill) pill.innerText = code || 'EMERGENCY_STOP';
+      if (desc) desc.innerText = reason;
+    }
+
+    function hideEmergencyBanner() {
+      const banner = document.getElementById('liveEmergencyBanner');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    function triggerDashboardEmergency(code, reason, source = 'motor') {
+      // Immediately send STOP to real hardware if connected
+      if (typeof sendHwCommand === 'function' && hwSensorState.connected) {
+        sendHwCommand('STOP');
+      }
+
+      dashboardEmergency.active = true;
+      dashboardEmergency.code = code;
+      dashboardEmergency.reason = reason;
+      dashboardEmergency.source = source;
+
+      showEmergencyBanner(code, reason);
+
+      const thoughtBubbleEl = document.getElementById('canvasLiveThoughtBubble');
+      const modeTitleEl = document.getElementById('canvasCurrentModeTitle');
+      const brainIconEl = document.getElementById('canvasAiBrainIcon');
+      const perturbBadge = document.getElementById('perturbationStatusBadge');
+      const headerStatusTxt = document.getElementById('aiStatusText');
+      const headerStatusDot = document.getElementById('aiStatusDot');
+
+      if (thoughtBubbleEl) {
+        thoughtBubbleEl.innerText = reason;
+        thoughtBubbleEl.className = 'text-[10px] text-rose-300 font-mono font-bold truncate block';
+      }
+      if (modeTitleEl) {
+        modeTitleEl.innerText = `🚨 หยุดฉุกเฉิน: ${code}`;
+        modeTitleEl.className = 'font-bold text-rose-400 block leading-tight animate-pulse';
+      }
+      if (brainIconEl) {
+        brainIconEl.innerText = '!';
+        brainIconEl.className = 'w-6 h-6 rounded-lg bg-rose-600 text-white font-black text-xs flex items-center justify-center shrink-0 animate-pulse';
+      }
+      if (perturbBadge) {
+        perturbBadge.innerText = `🚨 หยุดฉุกเฉิน (${code})`;
+        perturbBadge.className = 'text-[10px] font-bold bg-rose-600 text-white px-2.5 py-0.5 rounded-full animate-pulse';
+      }
+      if (headerStatusTxt) headerStatusTxt.innerText = reason;
+      if (headerStatusDot) headerStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-400 animate-ping inline-block mr-1.5 shrink-0';
+
+      updateDualSafetyCards({
+        motorFault: source === 'motor' || source === 'both',
+        motorText: (source === 'motor' || source === 'both') ? '⚠️ 920.0 mA (เกินเกณฑ์ 600/900 mA) — ตัดไฟ 0 N' : undefined,
+        emgFault: source === 'emg' || source === 'both',
+        emgText: (source === 'emg' || source === 'both') ? '⚠️ 89% Spike (Base 12%) — หยุดทันที' : undefined
+      });
+
+      appendHwEmergencyLog(code, reason, {
+        angle: hwSensorState.raw ? hwSensorState.raw.angle : 65,
+        avgMA: source === 'motor' ? 920.0 : (hwSensorState.raw ? hwSensorState.raw.avgMA : 180.0),
+        loadIndex: source === 'motor' ? 245.0 : 40.0,
+        emgLive: true,
+        emg: source === 'emg' ? 89 : 14
+      });
+
+      const voiceMsg = source === 'motor'
+        ? 'ฉุกเฉิน ตรวจพบการขัดมอเตอร์และแรงต้านเกินพิกัด ตัดกำลังมอเตอร์ทันที'
+        : source === 'emg'
+          ? 'ฉุกเฉิน ตรวจพบกล้ามเนื้อกระตุกผิดปกติ หยุดมอเตอร์ทันที'
+          : 'ฉุกเฉิน หยุดการทำงานมอเตอร์ทันที';
+      startEmergencyAlarm(voiceMsg);
+    }
+
+    function simulateMotorJamEmergency() {
+      triggerDashboardEmergency(
+        'OVERCURRENT_PEAK',
+        'ฉุกเฉิน! ตรวจพบการขัดมอเตอร์ / แรงต้านเกินพิกัดจาก INA219 (920 mA) — ตัดกำลังมอเตอร์ทันที',
+        'motor'
+      );
+    }
+
+    function simulateEmgSpikeEmergency() {
+      triggerDashboardEmergency(
+        'EMG_SPIKE',
+        'ฉุกเฉิน! ตรวจพบกล้ามเนื้อกระตุกผิดปกติ (EMG Spike 89%) — หยุดมอเตอร์ทันที',
+        'emg'
+      );
+    }
+
+    function clearDashboardEmergency() {
+      dashboardEmergency.active = false;
+      dashboardEmergency.code = '';
+      dashboardEmergency.reason = '';
+      dashboardEmergency.source = 'none';
+      stopEmergencyAlarm();
+      hideEmergencyBanner();
+
+      updateDualSafetyCards({
+        motorFault: false,
+        motorWarn: false,
+        motorText: hwSensorState.raw
+          ? `${hwSensorState.raw.avgMA.toFixed(1)} mA | ${hwSensorState.raw.volts.toFixed(2)} V`
+          : 'ปกติ (0.0 mA | 5.00 V)',
+        emgFault: false,
+        emgText: hwSensorState.raw && hwSensorState.raw.emgLive
+          ? `${hwSensorState.raw.emg}% (Base ${hwSensorState.raw.emgBase >= 0 ? hwSensorState.raw.emgBase.toFixed(1) + '%' : '--'})`
+          : 'ปกติ / รอสัญญาณ TX'
+      });
+
+      const brainIconEl = document.getElementById('canvasAiBrainIcon');
+      const perturbBadge = document.getElementById('perturbationStatusBadge');
+      const headerStatusTxt = document.getElementById('aiStatusText');
+      const headerStatusDot = document.getElementById('aiStatusDot');
+      if (brainIconEl) {
+        brainIconEl.innerText = hwSensorState.connected ? 'RX' : 'AI';
+        brainIconEl.className = 'w-6 h-6 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] flex items-center justify-center shrink-0 ai-thinking-glow';
+      }
+      if (perturbBadge) {
+        perturbBadge.innerText = '🟢 ปกติ';
+        perturbBadge.className = 'text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full';
+      }
+      if (headerStatusTxt) headerStatusTxt.innerText = 'ระบบพร้อมทำงาน (EMG Guard + INA219 Motor Guard)';
+      if (headerStatusDot) headerStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse inline-block mr-1.5 shrink-0';
+      if (!hwSensorState.connected) {
+        updateAIReasoningAndPrescription(false);
+      }
+    }
+
     function onHwTelemetry(sim) {
       const wasEmergency = hwSensorState.isEmergency;
       hwSensorState.connected = true;
@@ -5208,14 +5330,36 @@
       hwSensorState.aiStatusText = sim.aiStatusText;
       hwSensorState.raw = sim.raw;
 
+      // Update Dual-Safety Protection Cards (INA219 Motor Jam + EMG Spasm Guard)
+      const motorWarn = !sim.isMotorFault && Math.abs(sim.raw.avgMA) >= 400;
+      updateDualSafetyCards({
+        motorFault: Boolean(sim.isMotorFault),
+        motorWarn,
+        motorText: `${sim.raw.avgMA.toFixed(1)} mA | ${sim.raw.volts.toFixed(2)} V (Load: ${sim.raw.loadIndex.toFixed(0)}%)`,
+        emgFault: Boolean(sim.isEmgFault),
+        emgText: sim.emgLive && sim.emg >= 0
+          ? `${sim.emg}% (Base ${sim.emgBase >= 0 ? sim.emgBase.toFixed(1) + '%' : '--'})`
+          : 'รอสัญญาณ TX (ESP-NOW)'
+      });
+
       if (!wasEmergency && sim.isEmergency) {
-        // Latch current angle immediately on emergency
+        // Latch current angle immediately on emergency & sound LOUD emergency alarm!
         hwSensorState.frozenProgress = hwSensorState.smoothProgress;
+        showEmergencyBanner(sim.raw.result, sim.aiStatusText);
+        const voiceMsg = sim.isMotorFault
+          ? 'ฉุกเฉิน ตรวจพบการขัดมอเตอร์และกระแสเกินพิกัด ตัดกำลังมอเตอร์ทันที'
+          : 'ฉุกเฉิน ตรวจพบกล้ามเนื้อกระตุกผิดปกติ หยุดมอเตอร์ทันที';
+        startEmergencyAlarm(voiceMsg);
+
         if (hwSensorState.lastEmergencyResult !== sim.raw.result) {
           hwSensorState.lastEmergencyResult = sim.raw.result;
           appendHwEmergencyLog(sim.raw.result, sim.aiStatusText, sim.raw);
         }
       } else if (!sim.isEmergency) {
+        if (wasEmergency && !dashboardEmergency.active) {
+          stopEmergencyAlarm();
+          hideEmergencyBanner();
+        }
         hwSensorState.lastEmergencyResult = '';
         if (sim.isStopped) {
           // Hold stationary at current real servo angle
@@ -5436,7 +5580,7 @@
       const k = computeCurrentAIKinematics(kinPhase);
 
       if (hwSensorState.connected && hwSensorState.hasTelemetry) {
-        if (hwSensorState.isRunning && !hwSensorState.isEmergency) {
+        if (hwSensorState.isRunning && !hwSensorState.isEmergency && !dashboardEmergency.active) {
           const activeTheta = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerTheta1 : k.upperTheta1;
           const activeSlide = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerSlide2 : k.upperSlide2;
 
@@ -5447,7 +5591,7 @@
           kinTorqueBuffer.push(k.dynamicTorque);
           kinTorqueBuffer.shift();
         }
-      } else if (kinSimPlaying) {
+      } else if (kinSimPlaying && !dashboardEmergency.active) {
         kinPhase += 0.032 * k.speedScale;
         const activeTheta = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerTheta1 : k.upperTheta1;
         const activeSlide = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerSlide2 : k.upperSlide2;

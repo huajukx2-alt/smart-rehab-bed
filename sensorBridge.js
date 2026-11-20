@@ -211,21 +211,33 @@ class KineFlexSensorBridge {
       emgBase >= 0 &&
       Math.abs(emgDelta) <= 20;
 
-    // 4. ตรวจสถานะฉุกเฉินจาก EMG และกระแส INA219
-    const isEmergency =
-      result === 'EMG_SPIKE' ||
-      result === 'EMG_HIGH' ||
+    // 4. ตรวจสถานะฉุกเฉินจาก EMG และกระแส INA219 (ขัดมอเตอร์ / แรงต้านเกินพิกัด)
+    const isMotorFault =
       result === 'OVERCURRENT_PEAK' ||
       result === 'OVERCURRENT_SUSTAINED' ||
+      result === 'MOTOR_VOLTAGE_LOW' ||
+      result === 'INA_OVERFLOW' ||
       result.startsWith('OVERCURRENT');
 
-    let aiStatusText = 'AI คิด: เซนเซอร์จริงทำงานปกติ กำลังประคองการเคลื่อนไหวตามวิถี';
+    const isEmgFault =
+      result === 'EMG_SPIKE' ||
+      result === 'EMG_HIGH';
+
+    const isEmergency = isEmgFault || isMotorFault;
+
+    let aiStatusText = 'AI คิด: เซนเซอร์ปกติ กำลังประคองการเคลื่อนไหวตามวิถี';
     if (result === 'EMG_SPIKE') {
       aiStatusText = 'ฉุกเฉิน! ตรวจพบกล้ามเนื้อกระตุกผิดปกติ (EMG_SPIKE) — หยุดมอเตอร์ทันที';
     } else if (result === 'EMG_HIGH') {
       aiStatusText = 'ฉุกเฉิน! แรงเกร็งกล้ามเนื้อสูงเกินเกณฑ์ปลอดภัย (EMG_HIGH) — หยุดมอเตอร์ทันที';
-    } else if (result.startsWith('OVERCURRENT')) {
-      aiStatusText = `ฉุกเฉิน! ตรวจพบแรงต้านเกินพิกัดจาก INA219 (${result}) — ตัดกำลังมอเตอร์แล้ว`;
+    } else if (result === 'OVERCURRENT_PEAK') {
+      aiStatusText = 'ฉุกเฉิน! ตรวจพบการขัดมอเตอร์ / กระแสพุ่งเกิน 900 mA (OVERCURRENT_PEAK) — ตัดไฟมอเตอร์ทันที';
+    } else if (result === 'OVERCURRENT_SUSTAINED') {
+      aiStatusText = 'ฉุกเฉิน! ตรวจพบการขัดมอเตอร์ / แรงต้านเกิน 600 mA ต่อเนื่อง (OVERCURRENT_SUSTAINED) — ตัดไฟมอเตอร์ทันที';
+    } else if (result === 'MOTOR_VOLTAGE_LOW') {
+      aiStatusText = 'ฉุกเฉิน! แรงดันไฟมอเตอร์ตกต่ำกว่า 4.0 V (อาจเกิดจากการขัดมอเตอร์) — หยุดมอเตอร์ทันที';
+    } else if (result === 'INA_OVERFLOW' || result.startsWith('OVERCURRENT')) {
+      aiStatusText = `ฉุกเฉิน! ตรวจพบการขัดมอเตอร์ / แรงต้านเกินพิกัดจาก INA219 (${result}) — ตัดกำลังมอเตอร์แล้ว`;
     } else if (mode === 'calibrating') {
       aiStatusText = 'AI คิด: กำลังคาริเบรตเซนเซอร์ EMG Baseline และกระแส INA219...';
     } else if (mode === 'stopped') {
@@ -252,6 +264,8 @@ class KineFlexSensorBridge {
       isRunning: mode === 'running',
       isStopped: mode === 'stopped',
       isEmergency,
+      isEmgFault,
+      isMotorFault,
       isPatientAssisting,
       theta1,
       s2,
