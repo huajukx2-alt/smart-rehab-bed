@@ -313,18 +313,50 @@
               </div>
             </div>
 
-            <!-- Compact Real-Time Trajectory & Force Graph -->
-            <div class="pt-1 space-y-1.5">
-              <div class="flex items-center justify-between text-[11px]">
-                <span class="font-extrabold text-slate-700">📈 กราฟมุมแขนกล & แรงมอเตอร์สด</span>
-                <div class="flex items-center space-x-2 text-[9.5px] font-mono text-slate-500">
-                  <span class="text-cyan-600 font-bold">● θ₁</span>
-                  <span class="text-emerald-600 font-bold">● S₂</span>
-                  <span class="text-amber-600 font-bold">● แรงมอเตอร์</span>
+            <!-- 2 SYNCHRONIZED LIVE CHARTS: (1) EMG vs POWER  &  (2) RESISTANCE vs POWER -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              <!-- Chart 1: EMG vs Motor Power -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between gap-1 text-[11px]">
+                  <span class="font-extrabold text-slate-700">⚡ EMG คู่กับ Motor Power</span>
+                  <span id="readoutEmgPowerPill" class="font-mono text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg">EMG 16% | 1.05 W</span>
+                </div>
+                <div class="h-36 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800">
+                  <canvas id="liveEmgPowerCanvas" class="w-full h-full block"></canvas>
+                  <div class="absolute left-2 top-1.5 flex items-center space-x-2 text-[9px] font-mono bg-slate-900/85 px-2 py-0.5 rounded text-slate-300">
+                    <span class="text-emerald-400">● EMG %</span>
+                    <span class="text-amber-300">┅ Base</span>
+                    <span class="text-sky-400">● Power (W)</span>
+                  </div>
                 </div>
               </div>
-              <div class="h-36 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800">
-                <canvas id="kinTrajectoryCanvas" class="w-full h-full block"></canvas>
+
+              <!-- Chart 2: Resistance (INA219) vs Motor Power -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between gap-1 text-[11px]">
+                  <span class="font-extrabold text-slate-700">⚙️ แรงต้าน คู่กับ Motor Power</span>
+                  <span id="readoutResPowerPill" class="font-mono text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg">210 mA | 1.05 W</span>
+                </div>
+                <div class="h-36 bg-slate-950 rounded-2xl overflow-hidden relative border border-slate-800">
+                  <canvas id="liveResistancePowerCanvas" class="w-full h-full block"></canvas>
+                  <div class="absolute left-2 top-1.5 flex items-center space-x-2 text-[9px] font-mono bg-slate-900/85 px-2 py-0.5 rounded text-slate-300">
+                    <span class="text-orange-400">● แรงต้าน (mA)</span>
+                    <span class="text-sky-400">● Power (W)</span>
+                    <span class="text-rose-400">┅ ตัด 600mA</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Power Behavior Legend (Assist vs Jam) -->
+            <div id="powerBehaviorBanner" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10.5px]">
+              <div id="powerHintAssist" class="rounded-xl px-3 py-2 bg-emerald-50/70 border border-emerald-200 text-emerald-900 transition-all">
+                <span class="font-extrabold block">💪 คนออกแรงช่วยหมุน (Assist-as-Needed)</span>
+                <span class="text-[10px] text-emerald-800">EMG ขึ้นเบาๆ ➔ แรงต้านลดลง ➔ <b>Power มอเตอร์ลดลง</b> (มอเตอร์เบาแรง)</span>
+              </div>
+              <div id="powerHintJam" class="rounded-xl px-3 py-2 bg-amber-50/70 border border-amber-200 text-amber-950 transition-all">
+                <span class="font-extrabold block">⚙️ คนไปขัดมอเตอร์ (Motor Jam / Resistance)</span>
+                <span class="text-[10px] text-amber-900">แรงต้านพุ่งขึ้น ➔ <b>Power มอเตอร์พุ่งสูง</b> ➔ เกิน 600mA <b>ตัดไฟ 0.00 W!</b></span>
               </div>
             </div>
           </div>
@@ -389,10 +421,14 @@
               </div>
             </div>
 
-            <!-- EMERGENCY & SIREN TEST BUTTONS -->
+            <!-- EMERGENCY & POWER BEHAVIOR TEST BUTTONS -->
             <div class="pt-1 border-t border-slate-100 space-y-2">
-              <span class="text-[10.5px] font-extrabold text-slate-600 block">🧪 ทดสอบระบบหยุดฉุกเฉิน & เสียงเตือนดัง:</span>
+              <span class="text-[10.5px] font-extrabold text-slate-600 block">🧪 ทดสอบพฤติกรรม Power & ระบบตัดฉุกเฉิน:</span>
               <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="simulatePatientAssistDemo()" class="col-span-2 py-2 px-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 active:scale-95 border-2 border-emerald-400 text-emerald-900 font-extrabold text-[11px] shadow-2xs transition-all cursor-pointer flex items-center justify-center space-x-1">
+                  <span>💪</span>
+                  <span>ทดสอบคนช่วยออกแรงหมุน (ดูกราฟ Power ลดลง)</span>
+                </button>
                 <button type="button" onclick="simulateMotorJamEmergency()" class="py-2.5 px-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 active:scale-95 border-2 border-amber-400 text-amber-950 font-extrabold text-[11px] shadow-2xs transition-all cursor-pointer flex items-center justify-center space-x-1">
                   <span>⚙️</span>
                   <span>ทดสอบขัดมอเตอร์</span>
@@ -429,6 +465,7 @@
       <!-- Hidden compatibility stubs for legacy AI prescription DOM IDs -->
       <div class="hidden" aria-hidden="true">
         <canvas id="iso3dBedCanvas"></canvas>
+        <canvas id="kinTrajectoryCanvas"></canvas>
         <input id="sliderAiMuscleGrade" type="range" value="2">
         <input id="sliderAiRomLimit" type="range" value="85">
         <input id="sliderAiSpasmTone" type="range" value="15">
@@ -3657,7 +3694,7 @@
     };
 
     function resizeKinCanvases() {
-      const ids = ['cadSideCanvas', 'iso3dBedCanvas', 'kinTrajectoryCanvas'];
+      const ids = ['cadSideCanvas', 'iso3dBedCanvas', 'kinTrajectoryCanvas', 'liveEmgPowerCanvas', 'liveResistancePowerCanvas'];
       ids.forEach(id => {
         const c = document.getElementById(id);
         if (c && c.parentElement && c.parentElement.clientWidth > 0) {
@@ -5258,23 +5295,82 @@
       startEmergencyAlarm(voiceMsg);
     }
 
+    let demoAssistActive = false;
+
+    function highlightPowerBehaviorCard(mode) {
+      const assistEl = document.getElementById('powerHintAssist');
+      const jamEl = document.getElementById('powerHintJam');
+      if (assistEl) {
+        assistEl.className = mode === 'assist'
+          ? 'rounded-xl px-3 py-2 bg-emerald-100 border-2 border-emerald-500 text-emerald-950 shadow-sm transition-all'
+          : 'rounded-xl px-3 py-2 bg-emerald-50/70 border border-emerald-200 text-emerald-900 transition-all';
+      }
+      if (jamEl) {
+        jamEl.className = mode === 'jam'
+          ? 'rounded-xl px-3 py-2 bg-rose-100 border-2 border-rose-500 text-rose-950 shadow-sm alert-border transition-all'
+          : 'rounded-xl px-3 py-2 bg-amber-50/70 border border-amber-200 text-amber-950 transition-all';
+      }
+    }
+
+    function simulatePatientAssistDemo() {
+      clearDashboardEmergency();
+      demoAssistActive = true;
+      highlightPowerBehaviorCard('assist');
+
+      const thoughtBubbleEl = document.getElementById('canvasLiveThoughtBubble');
+      const perturbBadge = document.getElementById('perturbationStatusBadge');
+      if (thoughtBubbleEl) {
+        thoughtBubbleEl.innerText = '💪 ผู้ป่วยช่วยออกแรงหมุน (Assist-as-Needed) ➔ แรงต้านลดลง ➔ Motor Power ลดลงอัตโนมัติ!';
+        thoughtBubbleEl.className = 'text-[10px] text-emerald-300 font-mono font-bold truncate block';
+      }
+      if (perturbBadge) {
+        perturbBadge.innerText = '💪 คนช่วยออกแรง ➔ Power ลด';
+        perturbBadge.className = 'text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full';
+      }
+      updateDualSafetyCards({
+        motorFault: false,
+        motorWarn: false,
+        motorText: '85.0 mA | 5.00 V (Power 0.43 W — มอเตอร์เบาแรง)',
+        emgFault: false,
+        emgText: '32% (Base 15% — ช่วยออกแรงสม่ำเสมอ)'
+      });
+    }
+
     function simulateMotorJamEmergency() {
+      demoAssistActive = false;
+      highlightPowerBehaviorCard('jam');
+      // Push a visible resistance + power spike right before emergency 0 W cutoff on the charts
+      if (typeof pushLivePowerSample === 'function') {
+        pushLivePowerSample(20, 15, 680, 3.40);
+        pushLivePowerSample(22, 15, 920, 4.60);
+        pushLivePowerSample(18, 15, 0, 0.00);
+      }
       triggerDashboardEmergency(
         'OVERCURRENT_PEAK',
-        'ฉุกเฉิน! ตรวจพบการขัดมอเตอร์ / แรงต้านเกินพิกัดจาก INA219 (920 mA) — ตัดกำลังมอเตอร์ทันที',
+        'ฉุกเฉิน! ตรวจพบการขัดมอเตอร์ / แรงต้านพุ่ง 920 mA (Power 4.6 W) — ตัดไฟเหลือ 0.00 W ทันที!',
         'motor'
       );
     }
 
     function simulateEmgSpikeEmergency() {
+      demoAssistActive = false;
+      highlightPowerBehaviorCard('none');
+      // Push a visible EMG spike right before emergency 0 W cutoff on the charts
+      if (typeof pushLivePowerSample === 'function') {
+        pushLivePowerSample(62, 15, 310, 1.55);
+        pushLivePowerSample(89, 15, 420, 2.10);
+        pushLivePowerSample(85, 15, 0, 0.00);
+      }
       triggerDashboardEmergency(
         'EMG_SPIKE',
-        'ฉุกเฉิน! ตรวจพบกล้ามเนื้อกระตุกผิดปกติ (EMG Spike 89%) — หยุดมอเตอร์ทันที',
+        'ฉุกเฉิน! ตรวจพบกล้ามเนื้อกระตุกผิดปกติ (EMG Spike 89%) — ตัดไฟเหลือ 0.00 W ทันที!',
         'emg'
       );
     }
 
     function clearDashboardEmergency() {
+      demoAssistActive = false;
+      highlightPowerBehaviorCard('none');
       dashboardEmergency.active = false;
       dashboardEmergency.code = '';
       dashboardEmergency.reason = '';
@@ -5649,7 +5745,7 @@
 
       if (shouldAdvanceGraph) {
         smoothKinState.sampleAccum += dt;
-        if (smoothKinState.sampleAccum >= 0.03) {
+        if (smoothKinState.sampleAccum >= 0.04) {
           smoothKinState.sampleAccum = 0;
           const activeTheta = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerTheta1 : k.upperTheta1;
           const activeSlide = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerSlide2 : k.upperSlide2;
@@ -5660,12 +5756,216 @@
           kinSlideBuffer.shift();
           kinTorqueBuffer.push(k.dynamicTorque);
           kinTorqueBuffer.shift();
+
+          // Compute synchronized EMG, Resistance (mA), and Motor Power (W = V * I)
+          let emgPct = 16;
+          let emgBasePct = 15;
+          let resMA = 210;
+          let powerW = 1.05;
+
+          if (hwSensorState.connected && hwSensorState.hasTelemetry && hwSensorState.raw) {
+            const r = hwSensorState.raw;
+            emgPct = (r.emgLive && r.emg >= 0) ? r.emg : 0;
+            emgBasePct = (r.emgLive && r.emgBase >= 0) ? r.emgBase : 0;
+            resMA = Math.abs(r.avgMA || 0);
+            const volts = Math.max(0, r.volts || 5.0);
+            powerW = hwSensorState.isRunning ? (resMA * volts) / 1000.0 : 0.0;
+
+            if (hwSensorState.isEmergency || resMA >= 400) {
+              highlightPowerBehaviorCard('jam');
+            } else if (hwSensorState.isPatientAssisting && resMA < 180) {
+              highlightPowerBehaviorCard('assist');
+            } else {
+              highlightPowerBehaviorCard('none');
+            }
+          } else if (demoAssistActive) {
+            // Patient assisting smoothly -> EMG gently higher, Resistance & Power visibly DROP!
+            const wave = Math.sin(kinPhase * 1.4);
+            emgBasePct = 15;
+            emgPct = 32 + wave * 5 + (Math.random() - 0.5) * 2;
+            resMA = 85 + Math.abs(Math.cos(kinPhase)) * 22;
+            powerW = (resMA * 5.0) / 1000.0;
+          } else {
+            // Normal passive/AAN demo
+            const wave = Math.sin(kinPhase);
+            emgBasePct = 15;
+            emgPct = 16 + Math.abs(wave) * 4 + (Math.random() - 0.5) * 1.5;
+            resMA = 195 + Math.abs(Math.cos(kinPhase)) * 45;
+            powerW = (resMA * 5.0) / 1000.0;
+          }
+
+          pushLivePowerSample(emgPct, emgBasePct, resMA, powerW);
         }
       }
 
       drawSideCadBlueprint(k);
-      drawIso3DBedTwin(k);
-      drawKinTrajectoryGraph(k);
+      drawEmgPowerChart();
+      drawResistancePowerChart();
+    }
+
+    // ============================================================================
+    // SYNCHRONIZED LIVE CHARTS: (1) EMG vs POWER  &  (2) RESISTANCE vs POWER
+    // ============================================================================
+    const LIVE_CHART_LEN = 90;
+    const liveEmgBuf = new Array(LIVE_CHART_LEN).fill(16);
+    const liveEmgBaseBuf = new Array(LIVE_CHART_LEN).fill(15);
+    const liveResMaBuf = new Array(LIVE_CHART_LEN).fill(210);
+    const livePowerWBuf = new Array(LIVE_CHART_LEN).fill(1.05);
+
+    function pushLivePowerSample(emgPct, emgBasePct, resMA, powerW) {
+      liveEmgBuf.push(Math.max(0, Math.min(100, emgPct)));
+      liveEmgBuf.shift();
+      liveEmgBaseBuf.push(Math.max(0, Math.min(100, emgBasePct)));
+      liveEmgBaseBuf.shift();
+      liveResMaBuf.push(Math.max(0, Math.min(1000, resMA)));
+      liveResMaBuf.shift();
+      livePowerWBuf.push(Math.max(0, Math.min(5.0, powerW)));
+      livePowerWBuf.shift();
+
+      const emgPill = document.getElementById('readoutEmgPowerPill');
+      if (emgPill) {
+        emgPill.innerText = `EMG ${Math.round(emgPct)}% | ${powerW.toFixed(2)} W`;
+      }
+      const resPill = document.getElementById('readoutResPowerPill');
+      if (resPill) {
+        resPill.innerText = `${Math.round(resMA)} mA | ${powerW.toFixed(2)} W`;
+      }
+    }
+
+    function drawEmgPowerChart() {
+      const canvas = document.getElementById('liveEmgPowerCanvas');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width === 0 && canvas.parentElement.clientWidth > 0) {
+        canvas.width = canvas.parentElement.clientWidth * dpr;
+        canvas.height = canvas.parentElement.clientHeight * dpr;
+      }
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      if (w === 0 || h === 0) return;
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      const cw = w / dpr, ch = h / dpr;
+
+      ctx.fillStyle = '#070d19';
+      ctx.fillRect(0, 0, cw, ch);
+
+      // Grid
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x < cw; x += 36) { ctx.moveTo(x, 0); ctx.lineTo(x, ch); }
+      for (let y = 20; y < ch; y += 26) { ctx.moveTo(0, y); ctx.lineTo(cw, y); }
+      ctx.stroke();
+
+      const topPad = 24, botPad = 10;
+      const plotH = ch - topPad - botPad;
+      const step = cw / (LIVE_CHART_LEN - 1);
+
+      // 1) EMG Baseline % (amber dashed, 0..100%)
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      liveEmgBaseBuf.forEach((v, i) => {
+        const x = i * step;
+        const y = topPad + plotH * (1 - v / 100);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 2) EMG % (emerald solid, 0..100%)
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      liveEmgBuf.forEach((v, i) => {
+        const x = i * step;
+        const y = topPad + plotH * (1 - v / 100);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // 3) Motor Power W (sky blue solid, 0..5.0 W)
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      livePowerWBuf.forEach((v, i) => {
+        const x = i * step;
+        const y = topPad + plotH * (1 - Math.min(1, v / 5.0));
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawResistancePowerChart() {
+      const canvas = document.getElementById('liveResistancePowerCanvas');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      if (canvas.width === 0 && canvas.parentElement.clientWidth > 0) {
+        canvas.width = canvas.parentElement.clientWidth * dpr;
+        canvas.height = canvas.parentElement.clientHeight * dpr;
+      }
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      if (w === 0 || h === 0) return;
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      const cw = w / dpr, ch = h / dpr;
+
+      ctx.fillStyle = '#070d19';
+      ctx.fillRect(0, 0, cw, ch);
+
+      // Grid
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x < cw; x += 36) { ctx.moveTo(x, 0); ctx.lineTo(x, ch); }
+      for (let y = 20; y < ch; y += 26) { ctx.moveTo(0, y); ctx.lineTo(cw, y); }
+      ctx.stroke();
+
+      const topPad = 24, botPad = 10;
+      const plotH = ch - topPad - botPad;
+      const step = cw / (LIVE_CHART_LEN - 1);
+
+      // Red dashed Trip Threshold at 600 mA (~3.0 W)
+      const tripY = topPad + plotH * (1 - 600 / 1000);
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.85)';
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(0, tripY);
+      ctx.lineTo(cw, tripY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 1) Resistance / Current mA (orange solid, 0..1000 mA)
+      ctx.strokeStyle = '#fb923c';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      liveResMaBuf.forEach((v, i) => {
+        const x = i * step;
+        const y = topPad + plotH * (1 - Math.min(1, v / 1000));
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // 2) Motor Power W (sky blue solid, 0..5.0 W)
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      livePowerWBuf.forEach((v, i) => {
+        const x = i * step;
+        const y = topPad + plotH * (1 - Math.min(1, v / 5.0));
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.restore();
     }
 
     // Initialize AI Kinematics Simulator on load
