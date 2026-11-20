@@ -6259,54 +6259,65 @@
         kinPhase += dt * 1.85 * targetK.speedScale;
       }
 
-      if (shouldAdvanceGraph) {
+      const shouldAdvanceLiveCharts = (hwSensorState.connected && hwSensorState.hasTelemetry)
+        ? !isAnyEmergency
+        : (kinSimPlaying && !isAnyEmergency);
+
+      if (shouldAdvanceLiveCharts) {
         smoothKinState.sampleAccum += dt;
         if (smoothKinState.sampleAccum >= 0.04) {
           smoothKinState.sampleAccum = 0;
-          const activeTheta = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerTheta1 : k.upperTheta1;
-          const activeSlide = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerSlide2 : k.upperSlide2;
 
-          kinThetaBuffer.push(activeTheta);
-          kinThetaBuffer.shift();
-          kinSlideBuffer.push(activeSlide);
-          kinSlideBuffer.shift();
-          kinTorqueBuffer.push(k.dynamicTorque);
-          kinTorqueBuffer.shift();
+          if (shouldAdvanceGraph) {
+            const activeTheta = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerTheta1 : k.upperTheta1;
+            const activeSlide = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerSlide2 : k.upperSlide2;
 
-          // Compute synchronized EMG, Resistance (mA), and Motor Power (W = V * I)
+            kinThetaBuffer.push(activeTheta);
+            kinThetaBuffer.shift();
+            kinSlideBuffer.push(activeSlide);
+            kinSlideBuffer.shift();
+            kinTorqueBuffer.push(k.dynamicTorque);
+            kinTorqueBuffer.shift();
+          }
+
+          // Compute synchronized EMG, Signed Resistance/Current (±mA), and Signed Motor Power (±W = V * I)
           let emgPct = 16;
           let emgBasePct = 15;
-          let resMA = 210;
-          let powerW = 1.05;
+          let resMA = 0;
+          let powerW = 0;
 
           if (hwSensorState.connected && hwSensorState.hasTelemetry && hwSensorState.raw) {
             const r = hwSensorState.raw;
             emgPct = (r.emgLive && r.emg >= 0) ? r.emg : 0;
             emgBasePct = (r.emgLive && r.emgBase >= 0) ? r.emgBase : 0;
-            resMA = Math.abs(r.avgMA || 0);
-            const volts = Math.max(0, r.volts || 5.0);
-            powerW = hwSensorState.isRunning ? (resMA * volts) / 1000.0 : 0.0;
+            // Preserve sign (+ / -) from INA219 so centered 0-line graph shows both directions!
+            resMA = Number.isFinite(Number(r.avgMA)) ? Number(r.avgMA) : 0;
+            const volts = Math.max(0, Number(r.volts) || 5.0);
+            powerW = (resMA * volts) / 1000.0;
 
-            if (hwSensorState.isEmergency || resMA >= 400) {
+            const absMA = Math.abs(resMA);
+            if (hwSensorState.isEmergency || absMA >= 400) {
               highlightPowerBehaviorCard('jam');
-            } else if (hwSensorState.isPatientAssisting && resMA < 180) {
+            } else if (hwSensorState.isPatientAssisting && absMA < 180) {
               highlightPowerBehaviorCard('assist');
             } else {
               highlightPowerBehaviorCard('none');
             }
           } else if (demoAssistActive) {
-            // Patient assisting smoothly -> EMG gently higher, Resistance & Power visibly DROP!
+            // Patient assisting smoothly -> EMG gently higher, signed Resistance & Power visibly DROP around 0!
             const wave = Math.sin(kinPhase * 1.4);
+            const dirWave = Math.cos(kinPhase);
             emgBasePct = 15;
-            emgPct = 32 + wave * 5 + (Math.random() - 0.5) * 2;
-            resMA = 85 + Math.abs(Math.cos(kinPhase)) * 22;
+            emgPct = 30 + wave * 7 + (Math.random() - 0.5) * 2;
+            resMA = dirWave * 75 + (Math.random() - 0.5) * 8;
             powerW = (resMA * 5.0) / 1000.0;
           } else {
-            // Normal passive/AAN demo
+            // Normal bipolar demo sweep (+ forward / - reverse around center 0 line)
             const wave = Math.sin(kinPhase);
+            const dirWave = Math.cos(kinPhase);
             emgBasePct = 15;
-            emgPct = 16 + Math.abs(wave) * 4 + (Math.random() - 0.5) * 1.5;
-            resMA = 195 + Math.abs(Math.cos(kinPhase)) * 45;
+            emgPct = 15 + wave * 6 + (Math.random() - 0.5) * 2;
+            resMA = dirWave * 190 + (Math.random() - 0.5) * 12;
             powerW = (resMA * 5.0) / 1000.0;
           }
 
@@ -6320,34 +6331,39 @@
     }
 
     // ============================================================================
-    // SYNCHRONIZED LIVE CHARTS: (1) EMG vs POWER  &  (2) RESISTANCE vs POWER
+    // SYNCHRONIZED BIPOLAR AUTO-SCALED CHARTS (CENTERED AT 0 / NORMAL BASELINE!)
+    // (1) EMG Δ vs Signed Power (±W)   &   (2) Signed Resistance (±mA) vs Signed Power (±W)
     // ============================================================================
     const LIVE_CHART_LEN = 90;
-    const liveEmgBuf = new Array(LIVE_CHART_LEN).fill(16);
+    const liveEmgBuf = new Array(LIVE_CHART_LEN).fill(15);
     const liveEmgBaseBuf = new Array(LIVE_CHART_LEN).fill(15);
-    const liveResMaBuf = new Array(LIVE_CHART_LEN).fill(210);
-    const livePowerWBuf = new Array(LIVE_CHART_LEN).fill(1.05);
+    const liveResMaBuf = new Array(LIVE_CHART_LEN).fill(0);
+    const livePowerWBuf = new Array(LIVE_CHART_LEN).fill(0);
 
     function pushLivePowerSample(emgPct, emgBasePct, resMA, powerW) {
       liveEmgBuf.push(Math.max(0, Math.min(100, emgPct)));
       liveEmgBuf.shift();
       liveEmgBaseBuf.push(Math.max(0, Math.min(100, emgBasePct)));
       liveEmgBaseBuf.shift();
-      liveResMaBuf.push(Math.max(0, Math.min(1000, resMA)));
+      // Preserve signed values (-1200 .. +1200 mA and -6.0 .. +6.0 W)
+      liveResMaBuf.push(Math.max(-1200, Math.min(1200, resMA)));
       liveResMaBuf.shift();
-      livePowerWBuf.push(Math.max(0, Math.min(5.0, powerW)));
+      livePowerWBuf.push(Math.max(-6.0, Math.min(6.0, powerW)));
       livePowerWBuf.shift();
 
       const emgPill = document.getElementById('readoutEmgPowerPill');
       if (emgPill) {
-        emgPill.innerText = `EMG ${Math.round(emgPct)}% | ${powerW.toFixed(2)} W`;
+        const signP = powerW > 0.005 ? '+' : '';
+        emgPill.innerText = `EMG ${Math.round(emgPct)}% | ${signP}${powerW.toFixed(2)} W`;
       }
       const resPill = document.getElementById('readoutResPowerPill');
       if (resPill) {
-        resPill.innerText = `${Math.round(resMA)} mA | ${powerW.toFixed(2)} W`;
+        const signI = resMA > 0.5 ? '+' : '';
+        const signP = powerW > 0.005 ? '+' : '';
+        resPill.innerText = `${signI}${Math.round(resMA)} mA | ${signP}${powerW.toFixed(2)} W`;
       }
       if (typeof recordAppSessionSample === 'function') {
-        recordAppSessionSample(emgPct, resMA, powerW);
+        recordAppSessionSample(emgPct, Math.abs(resMA), Math.abs(powerW));
       }
     }
 
@@ -6370,51 +6386,76 @@
       ctx.fillStyle = '#070d19';
       ctx.fillRect(0, 0, cw, ch);
 
-      // Grid
+      const leftPad = 36, rightPad = 6, topPad = 24, botPad = 10;
+      const plotW = Math.max(10, cw - leftPad - rightPad);
+      const plotH = Math.max(10, ch - topPad - botPad);
+      const midY = topPad + plotH * 0.5;
+      const halfH = plotH * 0.46;
+      const step = plotW / (LIVE_CHART_LEN - 1);
+
+      // Subtle vertical grid
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      for (let x = 0; x < cw; x += 36) { ctx.moveTo(x, 0); ctx.lineTo(x, ch); }
-      for (let y = 20; y < ch; y += 26) { ctx.moveTo(0, y); ctx.lineTo(cw, y); }
+      for (let x = leftPad; x < cw; x += 40) { ctx.moveTo(x, topPad); ctx.lineTo(x, ch - botPad); }
+      ctx.moveTo(leftPad, topPad); ctx.lineTo(cw - rightPad, topPad);
+      ctx.moveTo(leftPad, ch - botPad); ctx.lineTo(cw - rightPad, ch - botPad);
       ctx.stroke();
 
-      const topPad = 24, botPad = 10;
-      const plotH = ch - topPad - botPad;
-      const step = cw / (LIVE_CHART_LEN - 1);
-
-      // 1) EMG Baseline % (amber dashed, 0..100%)
-      ctx.strokeStyle = '#fbbf24';
-      ctx.lineWidth = 1.4;
+      // Prominent CENTER Normal/Zero Baseline (0 / Base)
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.55)';
+      ctx.lineWidth = 1.2;
       ctx.setLineDash([4, 3]);
       ctx.beginPath();
-      liveEmgBaseBuf.forEach((v, i) => {
-        const x = i * step;
-        const y = topPad + plotH * (1 - v / 100);
-        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      });
+      ctx.moveTo(leftPad, midY);
+      ctx.lineTo(cw - rightPad, midY);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // 2) EMG % (emerald solid, 0..100%)
+      // Auto-zoom symmetric ranges so even small live variations look vivid!
+      let maxEmgDev = 15; // min ±15% around baseline
+      for (let i = 0; i < LIVE_CHART_LEN; i++) {
+        maxEmgDev = Math.max(maxEmgDev, Math.abs(liveEmgBuf[i] - liveEmgBaseBuf[i]) * 1.35);
+      }
+      maxEmgDev = Math.min(100, Math.ceil(maxEmgDev / 5) * 5);
+
+      let maxPower = 0.4; // min ±0.40 W around 0
+      for (let i = 0; i < LIVE_CHART_LEN; i++) {
+        maxPower = Math.max(maxPower, Math.abs(livePowerWBuf[i]) * 1.35);
+      }
+      maxPower = Math.min(6.0, Math.ceil(maxPower * 10) / 10);
+
+      // Left Y-axis labels (+max, 0/Base, -max)
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '8.5px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`+${maxPower.toFixed(1)}W`, leftPad - 4, topPad + 6);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText('0/Base', leftPad - 4, midY + 3);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(`-${maxPower.toFixed(1)}W`, leftPad - 4, ch - botPad);
+
+      // 1) EMG deviation from Baseline (centered at midY: positive = flexing above base, negative = relaxing below base)
       ctx.strokeStyle = '#34d399';
       ctx.lineWidth = 2.2;
       ctx.beginPath();
-      liveEmgBuf.forEach((v, i) => {
-        const x = i * step;
-        const y = topPad + plotH * (1 - v / 100);
+      for (let i = 0; i < LIVE_CHART_LEN; i++) {
+        const x = leftPad + i * step;
+        const dev = liveEmgBuf[i] - liveEmgBaseBuf[i];
+        const y = midY - Math.max(-1, Math.min(1, dev / maxEmgDev)) * halfH;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      });
+      }
       ctx.stroke();
 
-      // 3) Motor Power W (sky blue solid, 0..5.0 W)
+      // 2) Signed Motor Power (±W) centered at midY
       ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 2.4;
+      ctx.lineWidth = 2.3;
       ctx.beginPath();
-      livePowerWBuf.forEach((v, i) => {
-        const x = i * step;
-        const y = topPad + plotH * (1 - Math.min(1, v / 5.0));
+      for (let i = 0; i < LIVE_CHART_LEN; i++) {
+        const x = leftPad + i * step;
+        const y = midY - Math.max(-1, Math.min(1, livePowerWBuf[i] / maxPower)) * halfH;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      });
+      }
       ctx.stroke();
 
       ctx.restore();
@@ -6439,49 +6480,90 @@
       ctx.fillStyle = '#070d19';
       ctx.fillRect(0, 0, cw, ch);
 
-      // Grid
+      const leftPad = 40, rightPad = 6, topPad = 24, botPad = 10;
+      const plotW = Math.max(10, cw - leftPad - rightPad);
+      const plotH = Math.max(10, ch - topPad - botPad);
+      const midY = topPad + plotH * 0.5;
+      const halfH = plotH * 0.46;
+      const step = plotW / (LIVE_CHART_LEN - 1);
+
+      // Subtle grid
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      for (let x = 0; x < cw; x += 36) { ctx.moveTo(x, 0); ctx.lineTo(x, ch); }
-      for (let y = 20; y < ch; y += 26) { ctx.moveTo(0, y); ctx.lineTo(cw, y); }
+      for (let x = leftPad; x < cw; x += 40) { ctx.moveTo(x, topPad); ctx.lineTo(x, ch - botPad); }
+      ctx.moveTo(leftPad, topPad); ctx.lineTo(cw - rightPad, topPad);
+      ctx.moveTo(leftPad, ch - botPad); ctx.lineTo(cw - rightPad, ch - botPad);
       ctx.stroke();
 
-      const topPad = 24, botPad = 10;
-      const plotH = ch - topPad - botPad;
-      const step = cw / (LIVE_CHART_LEN - 1);
-
-      // Red dashed Trip Threshold at 600 mA (~3.0 W)
-      const tripY = topPad + plotH * (1 - 600 / 1000);
-      ctx.strokeStyle = 'rgba(244, 63, 94, 0.85)';
-      ctx.lineWidth = 1.4;
-      ctx.setLineDash([5, 4]);
+      // Prominent CENTER Zero Baseline (0 mA / 0 W)
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.65)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 3]);
       ctx.beginPath();
-      ctx.moveTo(0, tripY);
-      ctx.lineTo(cw, tripY);
+      ctx.moveTo(leftPad, midY);
+      ctx.lineTo(cw - rightPad, midY);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // 1) Resistance / Current mA (orange solid, 0..1000 mA)
+      // Auto-zoom symmetric ranges (±mA and ±W) so small live values are clearly visible!
+      let maxMA = 60; // min ±60 mA so even small 15-40 mA current shows big clear waves!
+      for (let i = 0; i < LIVE_CHART_LEN; i++) {
+        maxMA = Math.max(maxMA, Math.abs(liveResMaBuf[i]) * 1.35);
+      }
+      maxMA = Math.min(1200, Math.ceil(maxMA / 20) * 20);
+
+      let maxPower = 0.4;
+      for (let i = 0; i < LIVE_CHART_LEN; i++) {
+        maxPower = Math.max(maxPower, Math.abs(livePowerWBuf[i]) * 1.35);
+      }
+      maxPower = Math.min(6.0, Math.ceil(maxPower * 10) / 10);
+
+      // Left Y-axis labels (+max mA, 0, -max mA)
+      ctx.fillStyle = '#fdba74';
+      ctx.font = '8.5px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`+${maxMA}`, leftPad - 4, topPad + 6);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillText('0 mA', leftPad - 4, midY + 3);
+      ctx.fillStyle = '#fdba74';
+      ctx.fillText(`-${maxMA}`, leftPad - 4, ch - botPad);
+
+      // Draw ±600 mA Trip Threshold lines whenever within visible zoom range
+      if (maxMA >= 450) {
+        const tripFrac = Math.min(1, 600 / maxMA);
+        const tripTopY = midY - tripFrac * halfH;
+        const tripBotY = midY + tripFrac * halfH;
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.85)';
+        ctx.lineWidth = 1.3;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(leftPad, tripTopY); ctx.lineTo(cw - rightPad, tripTopY);
+        ctx.moveTo(leftPad, tripBotY); ctx.lineTo(cw - rightPad, tripBotY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 1) Signed Resistance / Current (±mA) centered at midY
       ctx.strokeStyle = '#fb923c';
       ctx.lineWidth = 2.4;
       ctx.beginPath();
-      liveResMaBuf.forEach((v, i) => {
-        const x = i * step;
-        const y = topPad + plotH * (1 - Math.min(1, v / 1000));
+      for (let i = 0; i < LIVE_CHART_LEN; i++) {
+        const x = leftPad + i * step;
+        const y = midY - Math.max(-1, Math.min(1, liveResMaBuf[i] / maxMA)) * halfH;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      });
+      }
       ctx.stroke();
 
-      // 2) Motor Power W (sky blue solid, 0..5.0 W)
+      // 2) Signed Motor Power (±W) centered at midY
       ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 2.2;
+      ctx.lineWidth = 2.1;
       ctx.beginPath();
-      livePowerWBuf.forEach((v, i) => {
-        const x = i * step;
-        const y = topPad + plotH * (1 - Math.min(1, v / 5.0));
+      for (let i = 0; i < LIVE_CHART_LEN; i++) {
+        const x = leftPad + i * step;
+        const y = midY - Math.max(-1, Math.min(1, livePowerWBuf[i] / maxPower)) * halfH;
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-      });
+      }
       ctx.stroke();
 
       ctx.restore();
