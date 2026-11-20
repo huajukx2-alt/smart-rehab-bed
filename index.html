@@ -144,6 +144,69 @@
         </div>
       </div>
 
+      <!-- HARDWARE LIVE BRIDGE BAR: ESP32 RX USB Web Serial (Chrome / Edge over HTTPS) -->
+      <div id="hwBridgeCard" class="bg-white rounded-3xl p-3.5 shadow-sm border-2 border-slate-200/90 transition-all space-y-2.5">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+          <div class="flex items-center space-x-2.5">
+            <div id="hwBridgeIcon" class="w-9 h-9 rounded-2xl bg-slate-900 text-cyan-400 flex items-center justify-center text-base font-bold shrink-0">
+              🔌
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-xs md:text-sm font-extrabold text-slate-800">เชื่อมต่อบอร์ด ESP32 RX จริง (Web Serial USB)</h3>
+                <span id="hwConnBadge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                  ⚪ โหมดจำลองอัตโนมัติ (Demo)
+                </span>
+              </div>
+              <p id="hwStatusSubtext" class="text-[10.5px] text-slate-500">
+                เสียบสาย USB บอร์ด RX แล้วกดเชื่อมต่อ (รองรับ Chrome / Edge บน GitHub Pages HTTPS โดยไม่ต้องสลับ Wi-Fi)
+              </p>
+            </div>
+          </div>
+
+          <!-- Hardware Action Buttons -->
+          <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+            <button type="button" id="btnUsbConnect" onclick="toggleUsbSerialConnection()" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer">
+              <span>🔌</span>
+              <span id="btnUsbConnectText">เชื่อมต่อ USB (ESP32 RX)</span>
+            </button>
+            <button type="button" id="btnHwStart" onclick="sendHwCommand('START')" disabled class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer">
+              ▶️ START
+            </button>
+            <button type="button" id="btnHwStop" onclick="sendHwCommand('STOP')" disabled class="px-3 py-2 bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer">
+              ⏹️ STOP
+            </button>
+            <button type="button" id="btnHwCalibrate" onclick="sendHwCommand('CALIBRATE')" disabled class="px-3 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer">
+              🎯 CALIBRATE
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Raw Sensor Readout Strip (Shown clearly when connected) -->
+        <div id="hwTelemetryStrip" class="hidden grid grid-cols-2 sm:grid-cols-5 gap-2 bg-slate-950 text-white rounded-2xl p-2.5 border border-slate-800 font-mono text-center">
+          <div class="bg-slate-900/90 rounded-xl px-2 py-1.5 border border-slate-800">
+            <span class="text-[9px] text-slate-400 block font-sans">สถานะบอร์ด RX</span>
+            <span id="hwReadoutMode" class="text-[11px] font-extrabold text-cyan-300">stopped / READY</span>
+          </div>
+          <div class="bg-slate-900/90 rounded-xl px-2 py-1.5 border border-slate-800">
+            <span class="text-[9px] text-slate-400 block font-sans">มุมเซอร์โวจริง (80°–100°)</span>
+            <span id="hwReadoutAngle" class="text-[11px] font-extrabold text-emerald-400">--°</span>
+          </div>
+          <div class="bg-slate-900/90 rounded-xl px-2 py-1.5 border border-slate-800">
+            <span class="text-[9px] text-slate-400 block font-sans">กระแส INA219 / โหลด</span>
+            <span id="hwReadoutCurrent" class="text-[11px] font-extrabold text-amber-300">-- mA (L: --)</span>
+          </div>
+          <div class="bg-slate-900/90 rounded-xl px-2 py-1.5 border border-slate-800">
+            <span class="text-[9px] text-slate-400 block font-sans">EMG ไร้สาย (TX → RX)</span>
+            <span id="hwReadoutEmg" class="text-[11px] font-extrabold text-indigo-300">--% (Base --)</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1 bg-slate-900/90 rounded-xl px-2 py-1.5 border border-slate-800">
+            <span class="text-[9px] text-slate-400 block font-sans">ผลตรวจความปลอดภัย</span>
+            <span id="hwReadoutResult" class="text-[11px] font-extrabold text-emerald-300">OK</span>
+          </div>
+        </div>
+      </div>
+
       <!-- STEP 1: SELECT 4 TARGET BODY PARTS / JOINT MODES (Matching the User's Blue Sketch) -->
       <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/90 space-y-3">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
@@ -1525,6 +1588,7 @@
     </div>
   </div>
 
+  <script src="./sensorBridge.js"></script>
   <script>
     let currentView = 'kinematics';
     let isRunning = false;
@@ -2809,6 +2873,10 @@
     }
 
     function triggerEmergencyStop(reason) {
+      // Immediately send STOP command to ESP32 RX hardware if connected via USB Serial
+      if (typeof kineFlexBridge !== 'undefined' && kineFlexBridge && kineFlexBridge.connected) {
+        kineFlexBridge.sendCommand('STOP');
+      }
       if (isEmergencyPopupOpen) return;
       isEmergencyPopupOpen = true;
       isRunning = false;
@@ -4016,10 +4084,12 @@
         assistPct = Math.max(15, assistPct - 25);
       }
 
-      // Minimum-jerk smooth harmonic wave s(t) in [0, 1]
+      // Minimum-jerk smooth harmonic wave s(t) in [0, 1], OR real ESP32 RX servo angle progress (80..100 deg -> 0..1)
+      const useRealHw = typeof hwSensorState !== 'undefined' && hwSensorState.connected && hwSensorState.hasTelemetry;
       const rawSin = Math.sin(phase);
-      // Smooth minimum-jerk shaping
-      const s = 0.5 + 0.5 * (rawSin - 0.12 * Math.sin(3 * phase));
+      const s = useRealHw
+        ? (hwSensorState.isEmergency ? hwSensorState.frozenProgress : hwSensorState.smoothProgress)
+        : (0.5 + 0.5 * (rawSin - 0.12 * Math.sin(3 * phase)));
 
       // Upper V-Arm (Arm / Elbow)
       let armThetaMin = cfg.theta1Min;
@@ -4039,7 +4109,7 @@
       let legSlideMax = legSlideMin + ((cfg.legSlide2Max || 150) - legSlideMin) * effectiveRomScale;
 
       if (kinSelectedPart === 'leg' || kinSelectedPart === 'knee' || kinSelectedPart === 'all4') {
-        const sLeg = kinSelectedPart === 'all4' ? (0.5 + 0.5 * Math.sin(phase - 0.6)) : s;
+        const sLeg = (!useRealHw && kinSelectedPart === 'all4') ? (0.5 + 0.5 * Math.sin(phase - 0.6)) : s;
         lowerTheta1 = legThetaMin + sLeg * (legThetaMax - legThetaMin);
         lowerSlide2 = legSlideMin + sLeg * (legSlideMax - legSlideMin);
       } else {
@@ -4047,8 +4117,8 @@
         lowerSlide2 = cfg.legSlide2Fixed || 150;
       }
 
-      // Add micro-compliance vibration when spasm_spike is active
-      if (kinPerturbation === 'spasm_spike') {
+      // Add micro-compliance vibration when demo spasm_spike is active (only in demo mode)
+      if (!useRealHw && kinPerturbation === 'spasm_spike') {
         const ripple = Math.sin(phase * 9) * 1.8;
         upperTheta1 += ripple * 0.4;
         upperSlide2 += ripple * 2.2;
@@ -4067,9 +4137,13 @@
         ? Math.round(95 - ((lowerSlide2 - 80) / 235) * 70)
         : Math.round(25 - ((lowerSlide2 - 95) / 240) * 18);
 
-      // AI Torque N
+      // AI Torque N (from INA219 avgMA when hardware is connected, else simulated)
       const baseTorque = 35.0 * (assistPct / 100.0);
-      const dynamicTorque = Math.max(0, baseTorque * (0.75 + 0.25 * Math.abs(Math.cos(phase))) + (kinPerturbation === 'spasm_spike' ? -6.5 : 0));
+      let dynamicTorque = Math.max(0, baseTorque * (0.75 + 0.25 * Math.abs(Math.cos(phase))) + (kinPerturbation === 'spasm_spike' ? -6.5 : 0));
+      if (useRealHw) {
+        dynamicTorque = hwSensorState.forceN;
+        assistPct = hwSensorState.forcePct;
+      }
 
       return {
         s,
@@ -4237,7 +4311,7 @@
       if (label) {
         ctx.shadowBlur = 0;
         ctx.font = 'bold 11px Prompt, sans-serif';
-        ctx.fillStyle = '#93c5fd';
+        ctx.fillStyle = (color === '#ef4444' || color === '#fca5a5') ? color : '#93c5fd';
         ctx.textAlign = 'center';
         ctx.fillText(label, ctrlX, ctrlY - 8);
       }
@@ -4594,7 +4668,11 @@
         ctx.stroke();
       });
 
-      // 6. OVERLAY 1: BLUE SKETCH TRAJECTORY ARROWS (ตรงตามภาพเส้นสีน้ำเงินที่ผู้ใช้ร่าง!)
+      // 6. OVERLAY 1: BLUE SKETCH TRAJECTORY ARROWS (เปลี่ยนเป็นสีแดงกะพริบทันทีเมื่อเกิดเหตุฉุกเฉินจากเซนเซอร์จริง!)
+      const isHwEmergency = typeof hwSensorState !== 'undefined' && hwSensorState.connected && hwSensorState.isEmergency;
+      const emergencyBlinkOn = Math.floor(Date.now() / 220) % 2 === 0;
+      const emergencyRed = emergencyBlinkOn ? '#ef4444' : '#fca5a5';
+
       if (cadOverlays.sketch) {
         if (kinSelectedPart === 'arm' || kinSelectedPart === 'all4') {
           // Wide circular arc sweeping over the 680mm arm (Top-Left Blue Sketch)
@@ -4605,8 +4683,8 @@
             pStart.sliderX + 18, pStart.sliderY,
             upperVF.apexX - 55, upperVF.apexY - 48,
             pEnd.sliderX - 35, pEnd.sliderY + 15,
-            '#38bdf8',
-            '1. วิถีกวาดแขนวงกว้าง (680mm Arc ↶)'
+            isHwEmergency ? emergencyRed : '#38bdf8',
+            isHwEmergency ? '🚨 ฉุกเฉิน! หยุดวิถีแขนกลทันที' : '1. วิถีกวาดแขนวงกว้าง (680mm Arc ↶)'
           );
         }
 
@@ -4616,13 +4694,17 @@
             ctx,
             upperVF.railEndX + 24, upperVF.railEndY - 5,
             upperVF.apexX + 24, upperVF.apexY + 12,
-            '#60a5fa',
+            isHwEmergency ? emergencyRed : '#60a5fa',
             3.5,
             10
           );
-          ctx.fillStyle = '#93c5fd';
+          ctx.fillStyle = isHwEmergency ? emergencyRed : '#93c5fd';
           ctx.font = 'bold 11px Prompt, sans-serif';
-          ctx.fillText('3. สไลด์ข้อแขน/ศอก 90° (ราง 370mm ↖)', upperVF.apexX + 32, (upperVF.apexY + upperVF.railEndY) * 0.5);
+          ctx.fillText(
+            isHwEmergency ? '🚨 หยุดสไลด์ราง 370mm ทันที!' : '3. สไลด์ข้อแขน/ศอก 90° (ราง 370mm ↖)',
+            upperVF.apexX + 32,
+            (upperVF.apexY + upperVF.railEndY) * 0.5
+          );
         }
 
         if (kinSelectedPart === 'leg' || kinSelectedPart === 'all4') {
@@ -4631,13 +4713,17 @@
             ctx,
             lowerVF.railEndX + 26, lowerVF.railEndY - 4,
             lowerVF.apexX + 22, lowerVF.apexY + 8,
-            '#34d399',
+            isHwEmergency ? emergencyRed : '#34d399',
             3.5,
             10
           );
-          ctx.fillStyle = '#6ee7b7';
+          ctx.fillStyle = isHwEmergency ? emergencyRed : '#6ee7b7';
           ctx.font = 'bold 11px Prompt, sans-serif';
-          ctx.fillText('2. ยกและเหยียดขา (Full Leg Lift ↖)', lowerVF.apexX + 30, lowerVF.apexY + 22);
+          ctx.fillText(
+            isHwEmergency ? '🚨 หยุดยกขาทันที!' : '2. ยกและเหยียดขา (Full Leg Lift ↖)',
+            lowerVF.apexX + 30,
+            lowerVF.apexY + 22
+          );
         }
 
         if (kinSelectedPart === 'knee' || kinSelectedPart === 'all4') {
@@ -4647,10 +4733,19 @@
             lowerVF.railEndX + 35, lowerVF.railEndY + 8,
             lowerVF.railEndX + 25, lowerVF.apexY + 18,
             lowerVF.apexX - 25, lowerVF.apexY + 22,
-            '#2dd4bf',
-            '4. งอ-เหยียดข้อขา/ข้อเข่า 90° (↰)'
+            isHwEmergency ? emergencyRed : '#2dd4bf',
+            isHwEmergency ? '🚨 ฉุกเฉิน! ล็อกมุมข้อเข่าทันที' : '4. งอ-เหยียดข้อขา/ข้อเข่า 90° (↰)'
           );
         }
+      }
+
+      // Flashing red border inside CAD canvas when real hardware reports an emergency
+      if (isHwEmergency) {
+        ctx.save();
+        ctx.strokeStyle = emergencyBlinkOn ? 'rgba(239, 68, 68, 0.95)' : 'rgba(248, 113, 113, 0.35)';
+        ctx.lineWidth = 6;
+        ctx.strokeRect(3, 3, cw - 6, ch - 6);
+        ctx.restore();
       }
 
       // 7. OVERLAY 2: CAD DIMENSIONS (680 mm, 370 mm, 1900 mm, 770|260|370|480)
@@ -4961,9 +5056,300 @@
       ctx.restore();
     }
 
+    // ============================================================================
+    // ESP32 RX LIVE USB SERIAL SENSOR BRIDGE (Web Serial API)
+    // ============================================================================
+    const hwSensorState = {
+      connected: false,
+      hasTelemetry: false,
+      isRunning: false,
+      isStopped: true,
+      isEmergency: false,
+      isPatientAssisting: false,
+      targetProgress: 0.5,
+      smoothProgress: 0.5,
+      frozenProgress: 0.5,
+      forceN: 0,
+      forcePct: 0,
+      emg: -1,
+      emgBase: -1,
+      emgLive: false,
+      aiStatusText: '',
+      lastEmergencyResult: '',
+      raw: null
+    };
+
+    function updateHwBridgeUIControls(connected, statusState = 'disconnected', statusMessage = '') {
+      const btnConnect = document.getElementById('btnUsbConnect');
+      const btnConnectText = document.getElementById('btnUsbConnectText');
+      const btnStart = document.getElementById('btnHwStart');
+      const btnStop = document.getElementById('btnHwStop');
+      const btnCal = document.getElementById('btnHwCalibrate');
+      const badge = document.getElementById('hwConnBadge');
+      const subtext = document.getElementById('hwStatusSubtext');
+      const strip = document.getElementById('hwTelemetryStrip');
+      const card = document.getElementById('hwBridgeCard');
+      const icon = document.getElementById('hwBridgeIcon');
+
+      if (btnStart) btnStart.disabled = !connected;
+      if (btnStop) btnStop.disabled = !connected;
+      if (btnCal) btnCal.disabled = !connected;
+
+      if (connected) {
+        if (btnConnect) {
+          btnConnect.className = "px-3.5 py-2 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer";
+        }
+        if (btnConnectText) btnConnectText.innerText = 'ตัดการเชื่อมต่อ USB';
+        if (badge) {
+          badge.innerText = '🟢 LIVE ESP32 RX (USB Serial 115200)';
+          badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
+        }
+        if (strip) strip.classList.remove('hidden');
+        if (card) card.className = 'bg-white rounded-3xl p-3.5 shadow-sm border-2 border-emerald-400/90 transition-all space-y-2.5';
+        if (icon) icon.className = 'w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-base font-bold shrink-0';
+      } else {
+        if (btnConnect) {
+          btnConnect.className = "px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer";
+        }
+        if (btnConnectText) btnConnectText.innerText = 'เชื่อมต่อ USB (ESP32 RX)';
+        if (badge) {
+          badge.innerText = statusState === 'error' ? '🔴 เชื่อมต่อไม่สำเร็จ' : '⚪ โหมดจำลองอัตโนมัติ (Demo)';
+          badge.className = statusState === 'error'
+            ? 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300'
+            : 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200';
+        }
+        if (strip) strip.classList.add('hidden');
+        if (card) card.className = 'bg-white rounded-3xl p-3.5 shadow-sm border-2 border-slate-200/90 transition-all space-y-2.5';
+        if (icon) icon.className = 'w-9 h-9 rounded-2xl bg-slate-900 text-cyan-400 flex items-center justify-center text-base font-bold shrink-0';
+      }
+
+      if (subtext && statusMessage) {
+        subtext.innerText = statusMessage;
+      }
+    }
+
+    function appendHwEmergencyLog(resultCode, message, raw) {
+      const logBox = document.getElementById('aiThinkingLogContainer');
+      if (!logBox) return;
+      const nowStr = new Date().toLocaleTimeString('th-TH');
+      const entry = document.createElement('div');
+      entry.className = "p-2.5 rounded-xl bg-rose-950/90 border border-rose-500/70 space-y-1";
+      entry.innerHTML = `
+        <div class="flex items-center justify-between text-[10px] text-rose-300 font-bold">
+          <span>🚨 [ESP32 RX Safety Trigger @ ${nowStr}]</span>
+          <span class="font-mono bg-rose-600 text-white px-1.5 py-0.5 rounded">${resultCode}</span>
+        </div>
+        <div class="text-white text-[10.5px] font-semibold">${message}</div>
+        <div class="text-[10px] text-rose-200/90 font-mono">
+          angle=${raw.angle}° | avgMA=${raw.avgMA.toFixed(1)} mA | loadIndex=${raw.loadIndex.toFixed(1)} | EMG=${raw.emgLive ? raw.emg + '%' : 'N/A'}
+        </div>
+      `;
+      logBox.prepend(entry);
+      while (logBox.children.length > 8) {
+        logBox.removeChild(logBox.lastChild);
+      }
+    }
+
+    function onHwTelemetry(sim) {
+      const wasEmergency = hwSensorState.isEmergency;
+      hwSensorState.connected = true;
+      hwSensorState.hasTelemetry = true;
+      hwSensorState.isRunning = sim.isRunning;
+      hwSensorState.isStopped = sim.isStopped;
+      hwSensorState.isEmergency = sim.isEmergency;
+      hwSensorState.isPatientAssisting = sim.isPatientAssisting;
+      hwSensorState.targetProgress = sim.progress;
+      hwSensorState.forceN = sim.forceN;
+      hwSensorState.forcePct = sim.forcePct;
+      hwSensorState.emg = sim.emg;
+      hwSensorState.emgBase = sim.emgBase;
+      hwSensorState.emgLive = sim.emgLive;
+      hwSensorState.aiStatusText = sim.aiStatusText;
+      hwSensorState.raw = sim.raw;
+
+      if (!wasEmergency && sim.isEmergency) {
+        // Latch current angle immediately on emergency
+        hwSensorState.frozenProgress = hwSensorState.smoothProgress;
+        if (hwSensorState.lastEmergencyResult !== sim.raw.result) {
+          hwSensorState.lastEmergencyResult = sim.raw.result;
+          appendHwEmergencyLog(sim.raw.result, sim.aiStatusText, sim.raw);
+        }
+      } else if (!sim.isEmergency) {
+        hwSensorState.lastEmergencyResult = '';
+        if (sim.isStopped) {
+          // Hold stationary at current real servo angle
+          hwSensorState.smoothProgress = sim.progress;
+        }
+      }
+
+      // 1) Update Hardware Telemetry Strip
+      const modeEl = document.getElementById('hwReadoutMode');
+      const angleEl = document.getElementById('hwReadoutAngle');
+      const curEl = document.getElementById('hwReadoutCurrent');
+      const emgEl = document.getElementById('hwReadoutEmg');
+      const resEl = document.getElementById('hwReadoutResult');
+      const card = document.getElementById('hwBridgeCard');
+      const badge = document.getElementById('hwConnBadge');
+
+      if (modeEl) {
+        modeEl.innerText = `${sim.raw.mode} / ${sim.raw.ready}`;
+        modeEl.className = sim.isRunning
+          ? 'text-[11px] font-extrabold text-emerald-400'
+          : 'text-[11px] font-extrabold text-amber-300';
+      }
+      if (angleEl) angleEl.innerText = `${sim.raw.angle}° (${Math.round(sim.progress * 100)}%)`;
+      if (curEl) curEl.innerText = `${sim.raw.avgMA.toFixed(1)} mA (L:${sim.raw.loadIndex.toFixed(1)})`;
+      if (emgEl) {
+        emgEl.innerText = sim.emgLive && sim.emg >= 0
+          ? `${sim.emg}% (Base ${sim.emgBase >= 0 ? sim.emgBase.toFixed(1) + '%' : '--'})`
+          : 'รอสัญญาณ TX (ESP-NOW)';
+      }
+      if (resEl) {
+        resEl.innerText = sim.raw.result || 'OK';
+        resEl.className = sim.isEmergency
+          ? 'text-[11px] font-extrabold text-rose-400 animate-pulse'
+          : 'text-[11px] font-extrabold text-emerald-300';
+      }
+
+      // 2) Update "AI คิด:" Box, Canvas Mode Pill, Perturbation Badge, and Header Status
+      const thoughtBubbleEl = document.getElementById('canvasLiveThoughtBubble');
+      const modeTitleEl = document.getElementById('canvasCurrentModeTitle');
+      const brainIconEl = document.getElementById('canvasAiBrainIcon');
+      const perturbBadge = document.getElementById('perturbationStatusBadge');
+      const headerStatusTxt = document.getElementById('aiStatusText');
+      const headerStatusDot = document.getElementById('aiStatusDot');
+
+      if (thoughtBubbleEl) {
+        thoughtBubbleEl.innerText = sim.aiStatusText;
+        thoughtBubbleEl.className = sim.isEmergency
+          ? 'text-[10px] text-rose-300 font-mono font-bold truncate block'
+          : 'text-[10px] text-slate-300 font-mono truncate block';
+      }
+
+      if (sim.isEmergency) {
+        if (modeTitleEl) {
+          modeTitleEl.innerText = `🚨 หยุดฉุกเฉินจากเซนเซอร์จริง: ${sim.raw.result}`;
+          modeTitleEl.className = 'font-bold text-rose-400 block leading-tight animate-pulse';
+        }
+        if (brainIconEl) {
+          brainIconEl.innerText = '!';
+          brainIconEl.className = 'w-6 h-6 rounded-lg bg-rose-600 text-white font-black text-xs flex items-center justify-center shrink-0 animate-pulse';
+        }
+        if (card) card.className = 'bg-rose-50/60 rounded-3xl p-3.5 shadow-sm border-2 border-rose-500 alert-border transition-all space-y-2.5';
+        if (badge) {
+          badge.innerText = `🚨 ฉุกเฉิน: ${sim.raw.result}`;
+          badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-600 text-white animate-pulse';
+        }
+        if (perturbBadge) {
+          perturbBadge.innerText = `🚨 ตรวจพบเหตุฉุกเฉินจริง (${sim.raw.result}) — หยุดมอเตอร์แล้ว`;
+          perturbBadge.className = 'text-[10px] font-bold bg-rose-600 text-white px-2 py-0.5 rounded-full animate-pulse';
+        }
+        if (headerStatusTxt) headerStatusTxt.innerText = sim.aiStatusText;
+        if (headerStatusDot) headerStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-400 animate-ping inline-block mr-1.5';
+      } else {
+        const cfg = PART_CONFIGS[kinSelectedPart] || PART_CONFIGS.arm;
+        if (modeTitleEl) {
+          modeTitleEl.innerText = `LIVE เซนเซอร์จริง: ${cfg.title} (${sim.raw.mode.toUpperCase()})`;
+          modeTitleEl.className = 'font-bold text-emerald-300 block leading-tight';
+        }
+        if (brainIconEl) {
+          brainIconEl.innerText = 'RX';
+          brainIconEl.className = 'w-6 h-6 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] flex items-center justify-center shrink-0 ai-thinking-glow';
+        }
+        if (card) card.className = 'bg-white rounded-3xl p-3.5 shadow-sm border-2 border-emerald-400/90 transition-all space-y-2.5';
+        if (badge) {
+          badge.innerText = sim.isRunning
+            ? '🟢 LIVE ESP32 RX (กำลังทำงาน)'
+            : '🟡 LIVE ESP32 RX (หยุดพัก)';
+          badge.className = sim.isRunning
+            ? 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300'
+            : 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300';
+        }
+        if (perturbBadge) {
+          if (sim.isPatientAssisting) {
+            perturbBadge.innerText = `💪 ผู้ป่วยกำลังช่วยออกแรง (Assist-as-Needed | EMG ${sim.emg}%)`;
+            perturbBadge.className = 'text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full';
+          } else if (sim.isStopped) {
+            perturbBadge.innerText = '⏸️ บอร์ด RX หยุดพัก (กด START เพื่อเริ่มเคลื่อนที่)';
+            perturbBadge.className = 'text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full';
+          } else {
+            perturbBadge.innerText = `🟢 เซนเซอร์จริงปกติ (${sim.raw.avgMA.toFixed(0)} mA | ${sim.raw.angle}°)`;
+            perturbBadge.className = 'text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full';
+          }
+        }
+        if (headerStatusTxt) headerStatusTxt.innerText = `ESP32 RX USB Live: ${sim.raw.mode.toUpperCase()} | ${sim.raw.angle}° | ${sim.raw.avgMA.toFixed(0)} mA`;
+        if (headerStatusDot) headerStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse inline-block mr-1.5';
+      }
+    }
+
+    function onHwStatusChange(status) {
+      hwSensorState.connected = Boolean(status.connected);
+      if (!status.connected) {
+        hwSensorState.hasTelemetry = false;
+        hwSensorState.isEmergency = false;
+        hwSensorState.isRunning = false;
+        hwSensorState.isStopped = true;
+        hwSensorState.lastEmergencyResult = '';
+        const brainIconEl = document.getElementById('canvasAiBrainIcon');
+        if (brainIconEl) {
+          brainIconEl.innerText = 'AI';
+          brainIconEl.className = 'w-6 h-6 rounded-lg bg-emerald-500 text-slate-950 font-black text-[10px] flex items-center justify-center shrink-0 ai-thinking-glow';
+        }
+        const headerStatusTxt = document.getElementById('aiStatusText');
+        if (headerStatusTxt) headerStatusTxt.innerText = 'AI Neural Kinematics: พร้อมวิเคราะห์และสร้างท่าบริหาร 4 ส่วน';
+        const headerStatusDot = document.getElementById('aiStatusDot');
+        if (headerStatusDot) headerStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse inline-block mr-1.5';
+        updateAIReasoningAndPrescription(false);
+      }
+      updateHwBridgeUIControls(status.connected, status.state, status.message);
+    }
+
+    const kineFlexBridge = typeof KineFlexSensorBridge !== 'undefined'
+      ? new KineFlexSensorBridge(onHwTelemetry, onHwStatusChange)
+      : null;
+
+    async function toggleUsbSerialConnection() {
+      if (!kineFlexBridge) {
+        alert('ไม่พบไฟล์ sensorBridge.js กรุณาตรวจสอบว่าไฟล์อยู่โฟลเดอร์เดียวกับ index.html');
+        return;
+      }
+      if (kineFlexBridge.connected) {
+        await kineFlexBridge.disconnect('ตัดการเชื่อมต่อ USB Serial แล้ว — กลับสู่โหมดจำลองอัตโนมัติ');
+      } else {
+        await kineFlexBridge.connect();
+      }
+    }
+
+    async function sendHwCommand(cmd) {
+      if (!kineFlexBridge || !kineFlexBridge.connected) {
+        alert('กรุณาเชื่อมต่อบอร์ด ESP32 RX ผ่านสาย USB ก่อนส่งคำสั่ง');
+        return;
+      }
+      await kineFlexBridge.sendCommand(cmd);
+    }
+
     function renderKinematicsFrame() {
+      if (hwSensorState.connected && hwSensorState.hasTelemetry) {
+        if (hwSensorState.isRunning && !hwSensorState.isEmergency) {
+          hwSensorState.smoothProgress += (hwSensorState.targetProgress - hwSensorState.smoothProgress) * 0.35;
+        }
+      }
+
       const k = computeCurrentAIKinematics(kinPhase);
-      if (kinSimPlaying) {
+
+      if (hwSensorState.connected && hwSensorState.hasTelemetry) {
+        if (hwSensorState.isRunning && !hwSensorState.isEmergency) {
+          const activeTheta = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerTheta1 : k.upperTheta1;
+          const activeSlide = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerSlide2 : k.upperSlide2;
+
+          kinThetaBuffer.push(activeTheta);
+          kinThetaBuffer.shift();
+          kinSlideBuffer.push(activeSlide);
+          kinSlideBuffer.shift();
+          kinTorqueBuffer.push(k.dynamicTorque);
+          kinTorqueBuffer.shift();
+        }
+      } else if (kinSimPlaying) {
         kinPhase += 0.032 * k.speedScale;
         const activeTheta = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerTheta1 : k.upperTheta1;
         const activeSlide = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerSlide2 : k.upperSlide2;
