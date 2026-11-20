@@ -263,3 +263,174 @@ class KineFlexSensorBridge {
 }
 
 window.KineFlexSensorBridge = KineFlexSensorBridge;
+
+/**
+ * KineFlexCloudBridge
+ * MQTT over WSS bridge for ESP32 RX <-> Mobile (iOS Safari / Android Chrome) & Desktop
+ * - Works over HTTPS (GitHub Pages) on iPhone, iPad, Android, and PC without USB cable
+ * - Subscribes to: kineflex/<deviceId>/telemetry
+ * - Publishes to:  kineflex/<deviceId>/cmd  (START / STOP / CALIBRATE / PING)
+ * - Uses the exact same telemetry JSON & mapToSimulation() as KineFlexSensorBridge
+ */
+class KineFlexCloudBridge {
+  constructor(onTelemetry, onStatusChange = null) {
+    this.onTelemetry = onTelemetry;
+    this.onStatusChange = onStatusChange;
+    this.client = null;
+    this.pingTimer = null;
+    this.connected = false;
+    this.deviceId = 'kineflex-rx-01';
+    this.brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
+    this._mapper = new KineFlexSensorBridge();
+  }
+
+  _emitStatus(state, message = '') {
+    if (typeof this.onStatusChange === 'function') {
+      this.onStatusChange({
+        state,
+        message,
+        connected: this.connected,
+        transport: 'cloud',
+        deviceId: this.deviceId
+      });
+    }
+  }
+
+  getTelemetryTopic() {
+    return `kineflex/${this.deviceId}/telemetry`;
+  }
+
+  getCommandTopic() {
+    return `kineflex/${this.deviceId}/cmd`;
+  }
+
+  async connect(deviceId = 'kineflex-rx-01', brokerUrl = 'wss://broker.emqx.io:8084/mqtt') {
+    if (typeof window.mqtt === 'undefined') {
+      const msg = 'ไม่พบไลบรารี MQTT.js กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองรีเฟรชหน้าเว็บ';
+      alert(msg);
+      this._emitStatus('error', msg);
+      return false;
+    }
+
+    if (this.connected) {
+      await this.disconnect();
+    }
+
+    const cleanId = String(deviceId || 'kineflex-rx-01').trim().replace(/[^a-zA-Z0-9_-]/g, '');
+    this.deviceId = cleanId || 'kineflex-rx-01';
+    this.brokerUrl = String(brokerUrl || 'wss://broker.emqx.io:8084/mqtt').trim();
+
+    this._emitStatus('connecting', `กำลังเชื่อมต่อ Cloud MQTT (${this.deviceId})...`);
+
+    return new Promise((resolve) => {
+      let settled = false;
+      const clientId = `kineflex-web-${Math.random().toString(16).slice(2, 10)}`;
+
+      try {
+        this.client = window.mqtt.connect(this.brokerUrl, {
+          clientId,
+          clean: true,
+          connectTimeout: 8000,
+          reconnectPeriod: 3000
+        });
+      } catch (err) {
+        const msg = `เริ่มการเชื่อมต่อ Cloud ไม่สำเร็จ: ${err && err.message ? err.message : err}`;
+        this._emitStatus('error', msg);
+        resolve(false);
+        return;
+      }
+
+      this.client.on('connect', () => {
+        this.connected = true;
+        const topic = this.getTelemetryTopic();
+        this.client.subscribe(topic, { qos: 0 }, (err) => {
+          if (err) {
+            this._emitStatus('error', `Subscribe ไม่สำเร็จ: ${err.message}`);
+            return;
+          }
+          this._emitStatus('connected', `เชื่อมต่อ Cloud MQTT สำเร็จ — รอรับข้อมูลจากบอร์ด "${this.deviceId}"`);
+        });
+
+        if (this.pingTimer) clearInterval(this.pingTimer);
+        this.pingTimer = setInterval(() => {
+          this.sendCommand('PING');
+        }, 500);
+
+        if (!settled) {
+          settled = true;
+          resolve(true);
+        }
+      });
+
+      this.client.on('message', (_topic, payload) => {
+        try {
+          let text = typeof payload === 'string' ? payload : payload.toString('utf8');
+          text = text.trim();
+          if (text.startsWith('TELEMETRY:')) {
+            text = text.slice('TELEMETRY:'.length);
+          }
+          const data = JSON.parse(text);
+          if (typeof this.onTelemetry === 'function') {
+            this.onTelemetry(this._mapper.mapToSimulation(data));
+          }
+        } catch (_) {
+          // Ignore malformed JSON payloads
+        }
+      });
+
+      this.client.on('reconnect', () => {
+        this._emitStatus('connecting', `กำลังเชื่อมต่อ Cloud MQTT ใหม่ (${this.deviceId})...`);
+      });
+
+      this.client.on('error', (err) => {
+        const msg = `Cloud MQTT Error: ${err && err.message ? err.message : err}`;
+        this._emitStatus('error', msg);
+        if (!settled) {
+          settled = true;
+          resolve(false);
+        }
+      });
+
+      this.client.on('close', () => {
+        if (this.connected) {
+          this.connected = false;
+        }
+      });
+    });
+  }
+
+  async disconnect(reason = 'ตัดการเชื่อมต่อ Cloud MQTT แล้ว') {
+    const wasConnected = this.connected || Boolean(this.client);
+    this.connected = false;
+
+    if (this.pingTimer) {
+      clearInterval(this.pingTimer);
+      this.pingTimer = null;
+    }
+
+    if (this.client) {
+      try {
+        this.client.end(true);
+      } catch (_) {}
+      this.client = null;
+    }
+
+    if (wasConnected) {
+      this._emitStatus('disconnected', reason);
+    }
+  }
+
+  async sendCommand(cmd) {
+    if (!this.connected || !this.client) return false;
+    try {
+      this.client.publish(this.getCommandTopic(), String(cmd).trim(), { qos: 0 });
+      return true;
+    } catch (err) {
+      console.warn('[KineFlexCloudBridge] sendCommand failed:', err);
+      return false;
+    }
+  }
+}
+
+window.KineFlexCloudBridge = KineFlexCloudBridge;
+

@@ -144,32 +144,45 @@
         </div>
       </div>
 
-      <!-- HARDWARE LIVE BRIDGE BAR: ESP32 RX USB Web Serial (Chrome / Edge over HTTPS) -->
+      <!-- HARDWARE LIVE BRIDGE BAR: Cloud MQTT (iPhone / Android / PC) + USB Web Serial (PC) -->
       <div id="hwBridgeCard" class="bg-white rounded-3xl p-3.5 shadow-sm border-2 border-slate-200/90 transition-all space-y-2.5">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+        <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5">
           <div class="flex items-center space-x-2.5">
             <div id="hwBridgeIcon" class="w-9 h-9 rounded-2xl bg-slate-900 text-cyan-400 flex items-center justify-center text-base font-bold shrink-0">
-              🔌
+              ☁️
             </div>
             <div>
               <div class="flex flex-wrap items-center gap-2">
-                <h3 class="text-xs md:text-sm font-extrabold text-slate-800">เชื่อมต่อบอร์ด ESP32 RX จริง (Web Serial USB)</h3>
+                <h3 class="text-xs md:text-sm font-extrabold text-slate-800">เชื่อมต่อบอร์ด ESP32 RX จริง (มือถือ Cloud / USB)</h3>
                 <span id="hwConnBadge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                   ⚪ โหมดจำลองอัตโนมัติ (Demo)
                 </span>
               </div>
               <p id="hwStatusSubtext" class="text-[10.5px] text-slate-500">
-                เสียบสาย USB บอร์ด RX แล้วกดเชื่อมต่อ (รองรับ Chrome / Edge บน GitHub Pages HTTPS โดยไม่ต้องสลับ Wi-Fi)
+                เปิดบน iPhone / Android ได้ทันทีผ่าน Cloud MQTT (ไม่ต้องต่อคอม) หรือเสียบ USB บน Chrome/Edge
               </p>
             </div>
           </div>
 
-          <!-- Hardware Action Buttons -->
+          <!-- Hardware Action Controls (Mobile-friendly wrap) -->
           <div class="flex flex-wrap items-center gap-1.5 shrink-0">
-            <button type="button" id="btnUsbConnect" onclick="toggleUsbSerialConnection()" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer">
-              <span>🔌</span>
-              <span id="btnUsbConnectText">เชื่อมต่อ USB (ESP32 RX)</span>
+            <!-- Device ID Input for Cloud MQTT -->
+            <div class="flex items-center bg-slate-100 border border-slate-200 rounded-xl px-2 py-1">
+              <span class="text-[10px] font-bold text-slate-500 mr-1.5">ID:</span>
+              <input id="hwDeviceIdInput" type="text" value="kineflex-rx-01" placeholder="kineflex-rx-01"
+                class="w-28 bg-transparent text-xs font-mono font-bold text-slate-800 focus:outline-none" />
+            </div>
+
+            <button type="button" id="btnCloudConnect" onclick="toggleCloudConnection()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer">
+              <span>☁️</span>
+              <span id="btnCloudConnectText">เชื่อม Cloud (มือถือ)</span>
             </button>
+
+            <button type="button" id="btnUsbConnect" onclick="toggleUsbSerialConnection()" class="px-3 py-2 bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer">
+              <span>🔌</span>
+              <span id="btnUsbConnectText">USB (คอม)</span>
+            </button>
+
             <button type="button" id="btnHwStart" onclick="sendHwCommand('START')" disabled class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer">
               ▶️ START
             </button>
@@ -186,7 +199,7 @@
         <div id="hwTelemetryStrip" class="hidden grid grid-cols-2 sm:grid-cols-5 gap-2 bg-slate-950 text-white rounded-2xl p-2.5 border border-slate-800 font-mono text-center">
           <div class="bg-slate-900/90 rounded-xl px-2 py-1.5 border border-slate-800">
             <span class="text-[9px] text-slate-400 block font-sans">สถานะบอร์ด RX</span>
-            <span id="hwReadoutMode" class="text-[11px] font-extrabold text-cyan-300">stopped / READY</span>
+            <span id="hwReadoutMode" class="text-[11px] font-extrabold text-cyan-300">รอข้อมูลจากบอร์ด...</span>
           </div>
           <div class="bg-slate-900/90 rounded-xl px-2 py-1.5 border border-slate-800">
             <span class="text-[9px] text-slate-400 block font-sans">มุมเซอร์โวจริง (80°–100°)</span>
@@ -1588,6 +1601,7 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
   <script src="./sensorBridge.js"></script>
   <script>
     let currentView = 'kinematics';
@@ -2873,9 +2887,9 @@
     }
 
     function triggerEmergencyStop(reason) {
-      // Immediately send STOP command to ESP32 RX hardware if connected via USB Serial
-      if (typeof kineFlexBridge !== 'undefined' && kineFlexBridge && kineFlexBridge.connected) {
-        kineFlexBridge.sendCommand('STOP');
+      // Immediately send STOP command to ESP32 RX hardware if connected via Cloud MQTT or USB Serial
+      if (typeof sendHwCommand === 'function' && typeof hwSensorState !== 'undefined' && hwSensorState.connected) {
+        sendHwCommand('STOP');
       }
       if (isEmergencyPopupOpen) return;
       isEmergencyPopupOpen = true;
@@ -5079,9 +5093,13 @@
       raw: null
     };
 
-    function updateHwBridgeUIControls(connected, statusState = 'disconnected', statusMessage = '') {
-      const btnConnect = document.getElementById('btnUsbConnect');
-      const btnConnectText = document.getElementById('btnUsbConnectText');
+    let activeHwTransport = null; // 'cloud' | 'usb' | null
+
+    function updateHwBridgeUIControls(connected, statusState = 'disconnected', statusMessage = '', transport = null) {
+      const btnCloud = document.getElementById('btnCloudConnect');
+      const btnCloudText = document.getElementById('btnCloudConnectText');
+      const btnUsb = document.getElementById('btnUsbConnect');
+      const btnUsbText = document.getElementById('btnUsbConnectText');
       const btnStart = document.getElementById('btnHwStart');
       const btnStop = document.getElementById('btnHwStop');
       const btnCal = document.getElementById('btnHwCalibrate');
@@ -5095,32 +5113,55 @@
       if (btnStop) btnStop.disabled = !connected;
       if (btnCal) btnCal.disabled = !connected;
 
+      const isCloudConn = connected && transport === 'cloud';
+      const isUsbConn = connected && transport === 'usb';
+
+      if (btnCloud) {
+        btnCloud.className = isCloudConn
+          ? "px-3.5 py-2 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"
+          : "px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer";
+      }
+      if (btnCloudText) btnCloudText.innerText = isCloudConn ? 'ตัด Cloud' : 'เชื่อม Cloud (มือถือ)';
+
+      if (btnUsb) {
+        btnUsb.className = isUsbConn
+          ? "px-3 py-2 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer"
+          : "px-3 py-2 bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer";
+      }
+      if (btnUsbText) btnUsbText.innerText = isUsbConn ? 'ตัด USB' : 'USB (คอม)';
+
       if (connected) {
-        if (btnConnect) {
-          btnConnect.className = "px-3.5 py-2 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer";
-        }
-        if (btnConnectText) btnConnectText.innerText = 'ตัดการเชื่อมต่อ USB';
         if (badge) {
-          badge.innerText = '🟢 LIVE ESP32 RX (USB Serial 115200)';
+          badge.innerText = isCloudConn
+            ? `🟢 LIVE Cloud MQTT (${kineFlexCloudBridge ? kineFlexCloudBridge.deviceId : 'RX'})`
+            : '🟢 LIVE ESP32 RX (USB Serial 115200)';
           badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
         }
         if (strip) strip.classList.remove('hidden');
         if (card) card.className = 'bg-white rounded-3xl p-3.5 shadow-sm border-2 border-emerald-400/90 transition-all space-y-2.5';
-        if (icon) icon.className = 'w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-base font-bold shrink-0';
-      } else {
-        if (btnConnect) {
-          btnConnect.className = "px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all cursor-pointer";
+        if (icon) {
+          icon.innerText = isCloudConn ? '☁️' : '🔌';
+          icon.className = 'w-9 h-9 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-base font-bold shrink-0';
         }
-        if (btnConnectText) btnConnectText.innerText = 'เชื่อมต่อ USB (ESP32 RX)';
+      } else {
         if (badge) {
-          badge.innerText = statusState === 'error' ? '🔴 เชื่อมต่อไม่สำเร็จ' : '⚪ โหมดจำลองอัตโนมัติ (Demo)';
-          badge.className = statusState === 'error'
-            ? 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300'
-            : 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200';
+          if (statusState === 'connecting') {
+            badge.innerText = '🟡 กำลังเชื่อมต่อ...';
+            badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300';
+          } else if (statusState === 'error') {
+            badge.innerText = '🔴 เชื่อมต่อไม่สำเร็จ';
+            badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300';
+          } else {
+            badge.innerText = '⚪ โหมดจำลองอัตโนมัติ (Demo)';
+            badge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200';
+          }
         }
         if (strip) strip.classList.add('hidden');
         if (card) card.className = 'bg-white rounded-3xl p-3.5 shadow-sm border-2 border-slate-200/90 transition-all space-y-2.5';
-        if (icon) icon.className = 'w-9 h-9 rounded-2xl bg-slate-900 text-cyan-400 flex items-center justify-center text-base font-bold shrink-0';
+        if (icon) {
+          icon.innerText = '☁️';
+          icon.className = 'w-9 h-9 rounded-2xl bg-slate-900 text-cyan-400 flex items-center justify-center text-base font-bold shrink-0';
+        }
       }
 
       if (subtext && statusMessage) {
@@ -5301,12 +5342,42 @@
         if (headerStatusDot) headerStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-300 animate-pulse inline-block mr-1.5';
         updateAIReasoningAndPrescription(false);
       }
-      updateHwBridgeUIControls(status.connected, status.state, status.message);
+      const transport = status.transport || 'usb';
+      if (status.connected) {
+        activeHwTransport = transport;
+      } else if (activeHwTransport === transport || !hwSensorState.connected) {
+        activeHwTransport = null;
+      }
+      updateHwBridgeUIControls(status.connected, status.state, status.message, activeHwTransport);
     }
 
     const kineFlexBridge = typeof KineFlexSensorBridge !== 'undefined'
-      ? new KineFlexSensorBridge(onHwTelemetry, onHwStatusChange)
+      ? new KineFlexSensorBridge(onHwTelemetry, (s) => onHwStatusChange({ ...s, transport: 'usb' }))
       : null;
+
+    const kineFlexCloudBridge = typeof KineFlexCloudBridge !== 'undefined'
+      ? new KineFlexCloudBridge(onHwTelemetry, (s) => onHwStatusChange({ ...s, transport: 'cloud' }))
+      : null;
+
+    async function toggleCloudConnection() {
+      if (!kineFlexCloudBridge) {
+        alert('ไม่พบคลาส KineFlexCloudBridge ใน sensorBridge.js');
+        return;
+      }
+      if (kineFlexCloudBridge.connected) {
+        await kineFlexCloudBridge.disconnect('ตัดการเชื่อมต่อ Cloud MQTT แล้ว — กลับสู่โหมดจำลองอัตโนมัติ');
+        return;
+      }
+      // Disconnect USB first if connected
+      if (kineFlexBridge && kineFlexBridge.connected) {
+        await kineFlexBridge.disconnect();
+      }
+      const inputEl = document.getElementById('hwDeviceIdInput');
+      const deviceId = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : 'kineflex-rx-01';
+      if (inputEl) inputEl.value = deviceId;
+      try { localStorage.setItem('kineflex_device_id', deviceId); } catch (_) {}
+      await kineFlexCloudBridge.connect(deviceId);
+    }
 
     async function toggleUsbSerialConnection() {
       if (!kineFlexBridge) {
@@ -5315,18 +5386,45 @@
       }
       if (kineFlexBridge.connected) {
         await kineFlexBridge.disconnect('ตัดการเชื่อมต่อ USB Serial แล้ว — กลับสู่โหมดจำลองอัตโนมัติ');
-      } else {
-        await kineFlexBridge.connect();
+        return;
       }
+      // Disconnect Cloud first if connected
+      if (kineFlexCloudBridge && kineFlexCloudBridge.connected) {
+        await kineFlexCloudBridge.disconnect();
+      }
+      await kineFlexBridge.connect();
     }
 
     async function sendHwCommand(cmd) {
-      if (!kineFlexBridge || !kineFlexBridge.connected) {
-        alert('กรุณาเชื่อมต่อบอร์ด ESP32 RX ผ่านสาย USB ก่อนส่งคำสั่ง');
+      if (activeHwTransport === 'cloud' && kineFlexCloudBridge && kineFlexCloudBridge.connected) {
+        await kineFlexCloudBridge.sendCommand(cmd);
         return;
       }
-      await kineFlexBridge.sendCommand(cmd);
+      if (activeHwTransport === 'usb' && kineFlexBridge && kineFlexBridge.connected) {
+        await kineFlexBridge.sendCommand(cmd);
+        return;
+      }
+      alert('กรุณาเชื่อมต่อบอร์ด ESP32 RX (ผ่าน Cloud หรือ USB) ก่อนส่งคำสั่ง');
     }
+
+    // Initialize mobile-friendly defaults: hide USB button on mobile browsers without Web Serial, restore Device ID
+    (function initHwBridgeDefaults() {
+      const btnUsb = document.getElementById('btnUsbConnect');
+      if (btnUsb && !('serial' in navigator)) {
+        btnUsb.classList.add('hidden');
+      }
+      const inputEl = document.getElementById('hwDeviceIdInput');
+      const params = new URLSearchParams(window.location.search);
+      const urlDevice = params.get('device');
+      let savedDevice = '';
+      try { savedDevice = localStorage.getItem('kineflex_device_id') || ''; } catch (_) {}
+      if (inputEl) {
+        inputEl.value = urlDevice || savedDevice || 'kineflex-rx-01';
+      }
+      if (params.get('autoconnect') === '1' && kineFlexCloudBridge) {
+        setTimeout(() => toggleCloudConnection(), 500);
+      }
+    })();
 
     function renderKinematicsFrame() {
       if (hwSensorState.connected && hwSensorState.hasTelemetry) {
