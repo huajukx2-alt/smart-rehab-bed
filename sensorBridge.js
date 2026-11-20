@@ -189,8 +189,11 @@ class KineFlexSensorBridge {
     const emgBase = Number.isFinite(Number(d.emgBase)) ? Number(d.emgBase) : -1;
     const emgLive = Boolean(d.emgLive);
 
-    // 1. แปลงมุมเซอร์โว 80..100° เป็นสัดส่วน 0..1 สำหรับคุมแขนกล (θ1 และ S2)
-    const progress = Math.max(0, Math.min(1, (angle - 80) / 20));
+    // 1. แปลงมุมเซอร์โว (ค่าเริ่มต้น 30..100° หรือตาม minAngle..maxAngle ที่บอร์ดส่งมา) เป็นสัดส่วน 0..1
+    const minAngle = Number.isFinite(Number(d.minAngle)) ? Number(d.minAngle) : 30;
+    const maxAngle = Number.isFinite(Number(d.maxAngle)) ? Number(d.maxAngle) : 100;
+    const angleSpan = Math.max(1, maxAngle - minAngle);
+    const progress = Math.max(0, Math.min(1, (angle - minAngle) / angleSpan));
     const theta1 = 55 + progress * 40;        // ช่วงมุมก้านหลักอ้างอิง 55° - 95°
     const s2 = 150 + progress * 220;          // ช่วงสไลด์รางอ้างอิง 150 - 370 mm
 
