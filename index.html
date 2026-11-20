@@ -6182,15 +6182,25 @@
       }
     })();
 
-    // Smooth frame-rate-independent kinematic pose filter (silky 60-120fps S-curve & live telemetry smoothing)
+    // Exact analytical 2nd-order critically-damped spring (C1 continuous velocity, ZERO overshoot, ZERO packet stutter)
+    function springStep(current, velocity, target, omega, dt) {
+      const diff = current - target;
+      const exp = Math.exp(-omega * dt);
+      const nextVal = target + (diff + (velocity + omega * diff) * dt) * exp;
+      const nextVel = (velocity - (velocity + omega * diff) * omega * dt) * exp;
+      return [nextVal, nextVel];
+    }
+
+    // Smooth frame-rate-independent kinematic pose filter (silky 60-120fps critically-damped spring)
     const smoothKinState = {
       initialized: false,
       lastTimeMs: 0,
-      upperTheta1: 70,
-      upperSlide2: 200,
-      lowerTheta1: 58,
-      lowerSlide2: 150,
-      dynamicTorque: 18,
+      hwVel: 0,
+      upperTheta1: 70, vUpperTheta1: 0,
+      upperSlide2: 200, vUpperSlide2: 0,
+      lowerTheta1: 58, vLowerTheta1: 0,
+      lowerSlide2: 150, vLowerSlide2: 0,
+      dynamicTorque: 18, vDynamicTorque: 0,
       sampleAccum: 0
     };
 
@@ -6206,10 +6216,19 @@
         (typeof dashboardEmergency !== 'undefined' && dashboardEmergency.active);
 
       if (hwSensorState.connected && hwSensorState.hasTelemetry) {
-        if (!isAnyEmergency) {
-          // Time-based exponential smoothing makes 10 Hz Cloud MQTT & 20 Hz USB glide smoothly at 60-120fps
-          const hwAlpha = 1 - Math.exp(-dt * 9.5);
-          hwSensorState.smoothProgress += (hwSensorState.targetProgress - hwSensorState.smoothProgress) * hwAlpha;
+        if (isAnyEmergency) {
+          smoothKinState.hwVel = 0;
+        } else {
+          // Critically-damped spring eliminates 10 Hz MQTT / 20 Hz USB staircase steps!
+          const [nextP, nextV] = springStep(
+            hwSensorState.smoothProgress,
+            smoothKinState.hwVel,
+            hwSensorState.targetProgress,
+            10.5,
+            dt
+          );
+          hwSensorState.smoothProgress = nextP;
+          smoothKinState.hwVel = nextV;
         }
       }
 
@@ -6222,14 +6241,25 @@
         smoothKinState.lowerTheta1 = targetK.lowerTheta1;
         smoothKinState.lowerSlide2 = targetK.lowerSlide2;
         smoothKinState.dynamicTorque = targetK.dynamicTorque;
-      } else if (!isAnyEmergency) {
-        // Smooth pose blending (glides gently when switching parts or tracking live servo)
-        const poseAlpha = 1 - Math.exp(-dt * (hwSensorState.connected ? 12.0 : 9.0));
-        smoothKinState.upperTheta1 += (targetK.upperTheta1 - smoothKinState.upperTheta1) * poseAlpha;
-        smoothKinState.upperSlide2 += (targetK.upperSlide2 - smoothKinState.upperSlide2) * poseAlpha;
-        smoothKinState.lowerTheta1 += (targetK.lowerTheta1 - smoothKinState.lowerTheta1) * poseAlpha;
-        smoothKinState.lowerSlide2 += (targetK.lowerSlide2 - smoothKinState.lowerSlide2) * poseAlpha;
-        smoothKinState.dynamicTorque += (targetK.dynamicTorque - smoothKinState.dynamicTorque) * poseAlpha;
+      } else if (isAnyEmergency) {
+        // Freeze velocities immediately on emergency
+        smoothKinState.vUpperTheta1 = 0;
+        smoothKinState.vUpperSlide2 = 0;
+        smoothKinState.vLowerTheta1 = 0;
+        smoothKinState.vLowerSlide2 = 0;
+        smoothKinState.vDynamicTorque = 0;
+      } else {
+        const omega = hwSensorState.connected ? 13.0 : 10.0;
+        [smoothKinState.upperTheta1, smoothKinState.vUpperTheta1] =
+          springStep(smoothKinState.upperTheta1, smoothKinState.vUpperTheta1, targetK.upperTheta1, omega, dt);
+        [smoothKinState.upperSlide2, smoothKinState.vUpperSlide2] =
+          springStep(smoothKinState.upperSlide2, smoothKinState.vUpperSlide2, targetK.upperSlide2, omega, dt);
+        [smoothKinState.lowerTheta1, smoothKinState.vLowerTheta1] =
+          springStep(smoothKinState.lowerTheta1, smoothKinState.vLowerTheta1, targetK.lowerTheta1, omega, dt);
+        [smoothKinState.lowerSlide2, smoothKinState.vLowerSlide2] =
+          springStep(smoothKinState.lowerSlide2, smoothKinState.vLowerSlide2, targetK.lowerSlide2, omega, dt);
+        [smoothKinState.dynamicTorque, smoothKinState.vDynamicTorque] =
+          springStep(smoothKinState.dynamicTorque, smoothKinState.vDynamicTorque, targetK.dynamicTorque, 9.0, dt);
       }
 
       // Build smoothed kinematic frame with matching anatomical joint angles
