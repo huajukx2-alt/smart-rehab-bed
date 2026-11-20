@@ -5570,17 +5570,87 @@
       }
     })();
 
+    // Smooth frame-rate-independent kinematic pose filter (silky 60-120fps S-curve & live telemetry smoothing)
+    const smoothKinState = {
+      initialized: false,
+      lastTimeMs: 0,
+      upperTheta1: 70,
+      upperSlide2: 200,
+      lowerTheta1: 58,
+      lowerSlide2: 150,
+      dynamicTorque: 18,
+      sampleAccum: 0
+    };
+
     function renderKinematicsFrame() {
+      const nowMs = performance.now();
+      const dt = smoothKinState.lastTimeMs > 0
+        ? Math.min(0.05, Math.max(0.001, (nowMs - smoothKinState.lastTimeMs) / 1000))
+        : 0.016;
+      smoothKinState.lastTimeMs = nowMs;
+
+      const isAnyEmergency =
+        (hwSensorState.connected && hwSensorState.isEmergency) ||
+        (typeof dashboardEmergency !== 'undefined' && dashboardEmergency.active);
+
       if (hwSensorState.connected && hwSensorState.hasTelemetry) {
-        if (hwSensorState.isRunning && !hwSensorState.isEmergency) {
-          hwSensorState.smoothProgress += (hwSensorState.targetProgress - hwSensorState.smoothProgress) * 0.35;
+        if (!isAnyEmergency) {
+          // Time-based exponential smoothing makes 10 Hz Cloud MQTT & 20 Hz USB glide smoothly at 60-120fps
+          const hwAlpha = 1 - Math.exp(-dt * 9.5);
+          hwSensorState.smoothProgress += (hwSensorState.targetProgress - hwSensorState.smoothProgress) * hwAlpha;
         }
       }
 
-      const k = computeCurrentAIKinematics(kinPhase);
+      const targetK = computeCurrentAIKinematics(kinPhase);
 
-      if (hwSensorState.connected && hwSensorState.hasTelemetry) {
-        if (hwSensorState.isRunning && !hwSensorState.isEmergency && !dashboardEmergency.active) {
+      if (!smoothKinState.initialized) {
+        smoothKinState.initialized = true;
+        smoothKinState.upperTheta1 = targetK.upperTheta1;
+        smoothKinState.upperSlide2 = targetK.upperSlide2;
+        smoothKinState.lowerTheta1 = targetK.lowerTheta1;
+        smoothKinState.lowerSlide2 = targetK.lowerSlide2;
+        smoothKinState.dynamicTorque = targetK.dynamicTorque;
+      } else if (!isAnyEmergency) {
+        // Smooth pose blending (glides gently when switching parts or tracking live servo)
+        const poseAlpha = 1 - Math.exp(-dt * (hwSensorState.connected ? 12.0 : 9.0));
+        smoothKinState.upperTheta1 += (targetK.upperTheta1 - smoothKinState.upperTheta1) * poseAlpha;
+        smoothKinState.upperSlide2 += (targetK.upperSlide2 - smoothKinState.upperSlide2) * poseAlpha;
+        smoothKinState.lowerTheta1 += (targetK.lowerTheta1 - smoothKinState.lowerTheta1) * poseAlpha;
+        smoothKinState.lowerSlide2 += (targetK.lowerSlide2 - smoothKinState.lowerSlide2) * poseAlpha;
+        smoothKinState.dynamicTorque += (targetK.dynamicTorque - smoothKinState.dynamicTorque) * poseAlpha;
+      }
+
+      // Build smoothed kinematic frame with matching anatomical joint angles
+      const k = {
+        ...targetK,
+        upperTheta1: smoothKinState.upperTheta1,
+        upperSlide2: smoothKinState.upperSlide2,
+        lowerTheta1: smoothKinState.lowerTheta1,
+        lowerSlide2: smoothKinState.lowerSlide2,
+        dynamicTorque: smoothKinState.dynamicTorque,
+        shoulderDeg: Math.round(30 + ((smoothKinState.upperTheta1 - 45) / 80) * 110),
+        elbowDeg: (kinSelectedPart === 'elbow' || kinSelectedPart === 'all4')
+          ? Math.round(45 + ((smoothKinState.upperSlide2 - 70) / 255) * 95)
+          : Math.round(135 + ((smoothKinState.upperSlide2 - 180) / 120) * 30),
+        hipDeg: Math.round(15 + ((smoothKinState.lowerTheta1 - 50) / 45) * 55),
+        kneeDeg: (kinSelectedPart === 'knee' || kinSelectedPart === 'all4')
+          ? Math.round(95 - ((smoothKinState.lowerSlide2 - 80) / 235) * 70)
+          : Math.round(25 - ((smoothKinState.lowerSlide2 - 95) / 240) * 18)
+      };
+
+      const shouldAdvanceGraph = hwSensorState.connected && hwSensorState.hasTelemetry
+        ? (hwSensorState.isRunning && !isAnyEmergency)
+        : (kinSimPlaying && !isAnyEmergency);
+
+      if (!hwSensorState.connected && kinSimPlaying && !isAnyEmergency) {
+        // Frame-rate independent smooth angular velocity (~1.85 rad/s at 1.0x speed)
+        kinPhase += dt * 1.85 * targetK.speedScale;
+      }
+
+      if (shouldAdvanceGraph) {
+        smoothKinState.sampleAccum += dt;
+        if (smoothKinState.sampleAccum >= 0.03) {
+          smoothKinState.sampleAccum = 0;
           const activeTheta = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerTheta1 : k.upperTheta1;
           const activeSlide = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerSlide2 : k.upperSlide2;
 
@@ -5591,17 +5661,6 @@
           kinTorqueBuffer.push(k.dynamicTorque);
           kinTorqueBuffer.shift();
         }
-      } else if (kinSimPlaying && !dashboardEmergency.active) {
-        kinPhase += 0.032 * k.speedScale;
-        const activeTheta = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerTheta1 : k.upperTheta1;
-        const activeSlide = (kinSelectedPart === 'leg' || kinSelectedPart === 'knee') ? k.lowerSlide2 : k.upperSlide2;
-
-        kinThetaBuffer.push(activeTheta);
-        kinThetaBuffer.shift();
-        kinSlideBuffer.push(activeSlide);
-        kinSlideBuffer.shift();
-        kinTorqueBuffer.push(k.dynamicTorque);
-        kinTorqueBuffer.shift();
       }
 
       drawSideCadBlueprint(k);
